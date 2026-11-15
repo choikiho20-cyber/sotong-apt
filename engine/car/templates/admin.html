@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' blob: data: {{site}}; connect-src 'self' https://api.github.com {{track}}; base-uri 'none'; form-action 'none'">
+<title>관리 · {{name}}</title>
+<style>
+:root{--paper:#f3f3f1;--ink:#16181b;--ink2:#474b52;--stone:#6d7178;--line:rgba(22,24,27,.15);--pt:#8a6a2c;--pt-h:#6f551f;--bad:#B3261E;--good:#2E7D4F;
+  --sans:Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+body{font-family:var(--sans);font-size:16px;line-height:1.65;color:var(--ink);background:var(--paper);word-break:keep-all}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--pt);outline-offset:2px}
+a{color:var(--pt)}
+header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:rgba(243,243,241,.96);border-bottom:1px solid var(--line)}
+header .who{font-size:13px;color:var(--stone)}
+main{max-width:860px;margin:0 auto;padding:18px 16px 140px}
+.card{border:1px solid var(--line);background:#fff;padding:18px 16px;margin-bottom:14px;border-radius:4px}
+.card h2{font-size:17px;margin:0 0 4px}
+.hint{font-size:13.5px;color:var(--stone);margin:0 0 12px}
+.demo{background:#fff7e0;border:1px solid #e6cf8a;padding:12px 14px;border-radius:4px;font-size:14px;margin-bottom:14px}
+label{display:block;font-size:13.5px;color:var(--ink2);margin:14px 0 5px}
+input[type=text],input[type=password],input[type=tel],input[type=url],input[type=date],textarea,select{width:100%;padding:12px 13px;background:var(--paper);border:1px solid var(--line);border-radius:3px;min-height:46px}
+textarea{min-height:88px;resize:vertical;line-height:1.6}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--pt);background:#fff}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:0 16px;min-height:44px;border:1px solid var(--pt);color:var(--pt);border-radius:3px;font-size:15px;font-weight:600;background:#fff;text-decoration:none}
+.btn:hover{background:var(--pt);color:#fff}
+.btn.solid{background:var(--pt);color:#fff}.btn.solid:hover{background:var(--pt-h)}
+.btn.ghost{border-color:var(--line);color:var(--ink2)}
+.btn.sm{min-height:36px;padding:0 10px;font-size:13px;font-weight:500}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center}
+.menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.menu button{min-height:56px;border:1px solid var(--line);border-radius:4px;background:#fff;font-weight:600;font-size:15px}
+.menu button:hover{border-color:var(--pt)}
+.menu button.on{background:var(--pt);color:#fff;border-color:var(--pt)}
+.item{border:1px solid var(--line);border-radius:4px;padding:12px 14px;margin-top:12px;background:#fcfcfb}
+.item .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.item .meta{font-size:13px;color:var(--stone)}
+.done{opacity:.55}
+.list a{display:block;padding:12px 4px;border-top:1px solid var(--line);color:inherit;text-decoration:none}
+.list a:hover{background:var(--paper)}
+.list .d{font-size:13px;color:var(--stone)}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px}
+.gal figure{border:1px solid var(--line);border-radius:4px;overflow:hidden;background:#fff}
+.gal img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.gal figcaption{padding:8px;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
+th,td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+.big{font-size:26px;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:10px}
+.stats div{border:1px solid var(--line);border-radius:4px;padding:10px;background:#fcfcfb}
+.stats span{display:block;font-size:12.5px;color:var(--stone)}
+code,pre{font-family:Consolas,monospace;font-size:13px;background:var(--paper);padding:2px 5px;border-radius:3px;word-break:break-all;white-space:pre-wrap}
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line)}
+.savebar .msg{font-size:14px;color:var(--ink2);flex:1;min-width:0}
+.savebar .msg.ok{color:var(--good)}.savebar .msg.err{color:var(--bad)}
+details summary{cursor:pointer;color:var(--ink2);font-size:14px}
+</style>
+</head>
+<body>
+<header><b>{{name}} 홈페이지 관리</b><button class="who" id="who"></button></header>
+<main>
+<div class="demo" id="demoNote" hidden>지금은 <b>견본 관리 화면</b>입니다. 모든 메뉴를 눌러 보실 수 있지만 저장은 되지 않습니다. 실제 홈페이지에서는 [저장]을 누르면 1~2분 뒤 홈페이지에 바로 반영됩니다.</div>
+
+<div class="card" id="gate">
+  <h2>들어가기</h2>
+  <div id="pwBox">
+    <p class="hint" id="pwHint">비밀번호를 넣어 주세요.</p>
+    <input type="password" id="pw" autocomplete="current-password" placeholder="비밀번호">
+    <div class="row"><button class="btn solid" id="pwGo">들어가기</button></div>
+  </div>
+  <details id="adv" style="margin-top:18px"><summary>관리자용 (처음 한 번 · 소통마케팅센터)</summary>
+    <label for="tok">이 홈페이지 저장소 전용 GitHub 토큰</label>
+    <input type="password" id="tok" autocomplete="off" placeholder="github_pat_...">
+    <div class="row"><button class="btn" id="tokSave">이 기기 연결</button><button class="btn ghost" id="pwSet">비밀번호 정하기·바꾸기</button><button class="btn ghost" id="tokClear" hidden>이 기기에서 나가기</button></div>
+  </details>
+</div>
+
+<div class="card" id="menuCard" hidden>
+  <div class="menu" id="menu">
+    <button data-sec="inbox">문의함·통계</button>
+    <button data-sec="offers">이달 조건·재고</button>
+    <button data-sec="deliveries">출고 사진</button>
+    <button data-sec="posts">글 쓰기·고치기</button>
+    <button data-sec="profile">첫 화면·연락처</button>
+    <button data-sec="tools">링크·서명·NFC</button>
+  </div>
+</div>
+
+<!-- 문의함 -->
+<div class="card sec" id="sec-inbox" hidden>
+  <h2>문의함 · 누가 봤는지 · 30일 통계</h2>
+  <p class="hint">문의는 문자로도 같이 옵니다. 여기서 [연락함]을 눌러 두면 다음 날 아침 알림에서 빠집니다. 문의는 90일 뒤 저절로 지워집니다(동의 문구대로).</p>
+  <div class="stats" id="kpi"></div>
+  <h2 style="margin-top:20px">문의</h2><div id="inqList"></div>
+  <h2 style="margin-top:20px">보내신 링크를 연 사람</h2><div id="viewList"></div>
+  <details style="margin-top:16px"><summary>날짜별 숫자</summary><div id="dayTable"></div></details>
+  <h2 style="margin-top:20px">폰으로 바로 알림 받기</h2>
+  <p class="hint" id="tgState">문의가 들어오거나 보내신 링크가 열리면 텔레그램으로 바로 알려 드립니다. 처음 한 번만: 텔레그램 앱 설치(무료) → [텔레그램 연결] → [시작].</p>
+  <div class="row"><button class="btn" id="tgOn">텔레그램 연결</button><button class="btn ghost" id="tgOff">연결 끊기</button><button class="btn ghost" id="inboxReload">새로고침</button></div>
+</div>
+
+<!-- 이달 조건·재고 -->
+<div class="card sec" id="sec-offers" hidden>
+  <h2>이달 조건 · 재고 보유</h2>
+  <p class="hint">직접 확인한 조건·재고만 올려 주세요. '마감일'이 지나면 홈페이지에서 저절로 내려갑니다. '즉시 출고', '최저가', '무조건' 같은 말은 광고 점검이 막습니다.</p>
+  <div id="offerList"></div>
+  <div class="row"><button class="btn" id="offerAdd">+ 하나 더</button></div>
+</div>
+
+<!-- 출고 사진 -->
+<div class="card sec" id="sec-deliveries" hidden>
+  <h2>출고 사진</h2>
+  <p class="hint">손님께 홈페이지에 올려도 되는지 꼭 여쭤본 사진만 올려 주세요. 번호판·얼굴은 손님이 괜찮다고 하신 만큼만. 별점은 달지 않습니다.</p>
+  <div class="gal" id="delList"></div>
+  <input type="file" id="delFile" accept="image/*" hidden>
+  <div class="row"><button class="btn" id="delAdd">+ 사진 올리기</button></div>
+</div>
+
+<!-- 글 -->
+<div class="card sec" id="sec-posts" hidden>
+  <h2>글 쓰기 · 고치기</h2>
+  <p class="hint">글해줌이 매주 쓰는 글도 여기서 고칠 수 있습니다. 소제목은 줄 맨 앞에 <code>## </code>, 목록은 <code>- </code>, 굵게는 <code>**이렇게**</code>.</p>
+  <div class="row"><button class="btn" id="postNew">+ 새 글</button></div>
+  <div class="list" id="postList" style="margin-top:12px"></div>
+  <div id="postEd" hidden>
+    <label for="pTitle">제목 (질문으로 쓰면 검색에 잘 잡힙니다)</label><input type="text" id="pTitle">
+    <label for="pDesc">요약 한 줄</label><input type="text" id="pDesc">
+    <label for="pBody">본문</label><textarea id="pBody" style="min-height:50vh"></textarea>
+    <div class="row"><button class="btn ghost sm" id="postDel">이 글 내리기</button></div>
+  </div>
+</div>
+
+<!-- 첫 화면·연락처 -->
+<div class="card sec" id="sec-profile" hidden>
+  <h2>첫 화면 · 연락처</h2>
+  <label for="fTag">한 줄 소개</label><input type="text" id="fTag">
+  <label for="fClaim">첫 화면 큰 문장</label><input type="text" id="fClaim">
+  <label for="fPhone">휴대폰</label><input type="tel" id="fPhone">
+  <label for="fKakao">카카오톡 채널·오픈채팅 주소</label><input type="url" id="fKakao" placeholder="https://pf.kakao.com/...">
+  <label for="fYt">유튜브 채널 주소</label><input type="url" id="fYt">
+  <label>블로그·인스타 등 내 다른 주소 (검색엔진·AI가 '같은 사람'으로 묶습니다)</label><div id="chList"></div>
+  <label for="fFin">할부 연결 고지 (대출모집인 등록번호 등, 해당될 때만)</label><input type="text" id="fFin">
+  <label>첫 화면 사진 (세로 사진, 본인이 나온 사진이 가장 좋습니다)</label>
+  <div class="row"><img id="heroPrev" alt="" style="max-width:160px;border-radius:3px"><input type="file" id="heroFile" accept="image/*"></div>
+</div>
+
+<!-- 도구 -->
+<div class="card sec" id="sec-tools" hidden>
+  <h2>손님별 링크 만들기</h2>
+  <p class="hint">손님 이름을 넣고 만든 링크를 카톡으로 보내면, 그분이 열어 볼 때 '누가 봤는지'에 남고 알림이 갑니다. 열어 본 그때가 연락하기 가장 좋은 때입니다.</p>
+  <input type="text" id="toName" placeholder="예) 김민수 (카니발 상담)">
+  <div class="row"><button class="btn solid" id="toMake">링크 만들기</button></div>
+  <p id="toOut" style="margin-top:10px"></p>
+  <h2 style="margin-top:26px">이메일 서명</h2>
+  <p class="hint">[복사]를 누른 뒤 메일 프로그램의 서명 칸에 붙여 넣으세요.</p>
+  <div id="sigBox" style="border:1px dashed var(--line);padding:12px;background:#fff"></div>
+  <div class="row"><button class="btn" id="sigCopy">서명 복사</button></div>
+  <h2 style="margin-top:26px">명함 QR · NFC 스티커</h2>
+  <p class="hint">QR은 명함·전시장 앞유리·차량 안 거치대에 그대로 인쇄하시면 됩니다. NFC 스티커(인터넷에서 개당 수백 원)에 아래 주소를 쓰면 손님 폰을 대기만 해도 홈페이지가 열립니다. 쓰는 법: 폰에 'NFC Tools' 앱 → 쓰기 → 레코드 추가 → URL → 아래 주소 → 스티커에 폰을 댑니다.</p>
+  <p><code id="nfcUrl"></code></p>
+  <div class="row"><a class="btn" href="qr.png" download>인쇄용 QR 내려받기</a><a class="btn ghost" href="contact.vcf" download>연락처 파일</a></div>
+</div>
+</main>
+
+<div class="savebar" id="savebar" hidden>
+  <span class="msg" id="msg"></span>
+  <button class="btn solid" id="save">저장</button>
+</div>
+
+<script>
+/* 값만 바꾼다: config.json · content/*.md · assets/ 사진. 화면은 저장소의 Actions(build.py)가 다시 만든다. */
+const REPO='{{repo}}', BRANCH='{{branch}}', KEY='{{key}}', SITE='{{site}}', TRACK='{{track}}', DEMO=!REPO;
+const HOST=SITE.replace(/^https?:\/\//,'').replace(/\/$/,''); // 서버가 이 사이트를 부르는 이름(github.io 는 경로까지)
+const API=`https://api.github.com/repos/${REPO}/contents/`;
+const $=id=>document.getElementById(id);
+const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// 열쇠는 탭을 닫으면 지워지는 sessionStorage 에만. github.io 는 여러 고객 사이트가 같은 저장 공간을 써서 영구 저장하면 서로 읽힐 수 있다
+const token=()=>{try{return sessionStorage.getItem(KEY)||''}catch(e){return ''}};
+const b64text=s=>{const u=new TextEncoder().encode(s);let b='';for(let i=0;i<u.length;i+=0x8000)b+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(b)};
+const b64dec=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\n/g,'')),c=>c.charCodeAt(0)));
+const today=()=>new Date(Date.now()+9*36e5).toISOString().slice(0,10);
+const stamp=()=>new Date(Date.now()+9*36e5).toISOString().replace(/\D/g,'').slice(0,14);
+let cfg=null, sec=null, dirty=false, posts=[], curPost=null, heroPick=null;
+const delPick=[];
+
+async function gh(path,opts={}){
+  const r=await fetch(API+path,{cache:'no-store',...opts,headers:{Authorization:'Bearer '+token(),Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}});
+  if(!r.ok){const e=new Error(r.status+' '+(await r.text()).slice(0,120));e.status=r.status;throw e}
+  return r.status===204?{}:r.json();
+}
+const put=(path,b64,sha,message)=>gh(path,{method:'PUT',body:JSON.stringify({message,content:b64,branch:BRANCH,...(sha?{sha}:{})})});
+const shaOf=async p=>{try{return (await gh(p+'?ref='+BRANCH)).sha}catch(e){return null}};
+function msg(t,kind){const m=$('msg');m.textContent=t;m.className='msg '+(kind||'')}
+/* 설정 저장: 읽고 → 고치고 → 쓰기. 그사이 글해줌이 바꿨으면(409/422) 다시 읽어 합친다 */
+async function saveConfig(mutate,message){
+  for(let tries=0;;tries++){
+    const f=await gh('config.json?ref='+BRANCH), c=JSON.parse(b64dec(f.content));
+    mutate(c);
+    try{await put('config.json',b64text(JSON.stringify(c,null,2)+'\n'),f.sha,message);cfg=c;return}
+    catch(e){if(tries<2&&(e.status===409||e.status===422))continue;throw e}
+  }
+}
+async function shrink(file,max){
+  const bm=await createImageBitmap(file,{imageOrientation:'from-image'});
+  const k=Math.min(1,max/Math.max(bm.width,bm.height)), w=Math.round(bm.width*k), h=Math.round(bm.height*k);
+  const cv=document.createElement('canvas'); cv.width=w; cv.height=h; cv.getContext('2d').drawImage(bm,0,0,w,h);
+  const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',.86));
+  const b64=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result.split(',')[1]);fr.readAsDataURL(blob)});
+  return {b64,url:URL.createObjectURL(blob)};
+}
+
+/* ── 들어가기 ── */
+function gate(){
+  const on=DEMO||!!token();
+  $('gate').hidden=on; $('menuCard').hidden=!on; $('tokClear').hidden=!token();
+  document.querySelectorAll('.sec').forEach(s=>s.hidden=true); $('savebar').hidden=true; sec=null;
+  $('who').textContent=DEMO?'견본':on?'들어와 있음':'잠김';
+  if(on&&!cfg) loadConfig();
+}
+async function loadConfig(){
+  try{cfg=DEMO?await (await fetch('admin-demo.json',{cache:'no-store'})).json():JSON.parse(b64dec((await gh('config.json?ref='+BRANCH)).content))}
+  catch(e){alert('설정을 못 불러왔습니다: '+e.message)}
+}
+$('tokSave').onclick=async()=>{
+  const v=$('tok').value.trim(); if(!v) return alert('토큰을 넣어 주세요.');
+  try{sessionStorage.setItem(KEY,v)}catch(e){return alert('이 브라우저는 저장이 막혀 있습니다.')}
+  try{await gh('config.json?ref='+BRANCH); gate()}
+  catch(e){sessionStorage.removeItem(KEY); alert('연결 실패 — 토큰이나 권한을 확인해 주세요.\n'+e.message)}
+};
+$('tokClear').onclick=()=>{sessionStorage.removeItem(KEY);cfg=null;gate()};
+$('who').onclick=()=>{if(token())$('gate').hidden=!$('gate').hidden};
+
+/* ── 메뉴 ── */
+document.querySelectorAll('#menu button').forEach(b=>b.onclick=()=>open(b.dataset.sec));
+function open(name){
+  if(dirty&&!confirm('저장하지 않은 수정이 있습니다. 버리고 옮길까요?'))return;
+  if(!cfg) return alert('설정을 불러오는 중입니다. 잠시 뒤 다시 눌러 주세요.');
+  dirty=false; sec=name;
+  document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('on',b.dataset.sec===name));
+  document.querySelectorAll('.sec').forEach(s=>s.hidden=s.id!=='sec-'+name);
+  $('savebar').hidden=!['offers','deliveries','profile'].includes(name); msg('');
+  ({inbox:loadInbox,offers:fillOffers,deliveries:fillDeliveries,posts:loadPosts,profile:fillProfile,tools:fillTools})[name]();
+  $('sec-'+name).scrollIntoView({block:'start'});
+}
+// 저장 버튼이 있는 화면에서 고친 것만 '저장 안 한 수정'으로 친다 (손님 링크 이름 입력 등은 제외)
+document.addEventListener('input',e=>{if(e.target.closest('#sec-offers,#sec-deliveries,#sec-profile,#postEd'))dirty=true});
+
+/* ── 문의함 ── */
+async function inbox(method='GET',body){
+  if(DEMO) return demoInbox();
+  const r=await fetch(`${TRACK}/inbox?site=${encodeURIComponent(HOST)}`,{method,headers:{Authorization:'Bearer '+token(),'Content-Type':'text/plain'},body:body&&JSON.stringify(body)});
+  if(!r.ok) throw new Error(r.status===401?'본인 확인 실패 — 관리자에게 문의함 연결을 요청해 주세요':'서버 응답 '+r.status);
+  return r.json();
+}
+function demoInbox(){
+  const d=today(), days=[...Array(30)].map((_,i)=>({date:new Date(Date.now()-(29-i)*864e5).toISOString().slice(0,10),visit_search:i%5+1,visit_kakao:i%3,visit_qr:i%4?0:2,tel:i%6?0:1,inquiry:i%9?0:1}));
+  return {demo:true,days,telegram:false,bot:'',
+    inquiries:[{id:'1',ts:d+'T10:12:00Z',inquiry_type:'시승·방문',name:'(견본) 김민수',phone:'010-0000-0000',model:cfg.offers?.[0]?.model||'',visit_date:d,visit_time:'오후',done:false,source:'search'},
+               {id:'2',ts:d+'T08:40:00Z',inquiry_type:'법인·대량',name:'(견본) OO물류',phone:'010-0000-0000',qty:'3대',message:'리스 견적 부탁드립니다',done:true,source:'kakao'}],
+    views:[{to:'(견본) 이영희',ts:d+'T09:05:00Z'}]};
+}
+const SRC={search:'검색',kakao:'카톡',qr:'QR',direct:'직접',other:'기타'};
+async function loadInbox(){
+  $('inqList').innerHTML=$('viewList').innerHTML='<p class="hint">불러오는 중…</p>';
+  let d; try{d=await inbox()}catch(e){$('inqList').innerHTML=`<p class="hint">${esc(e.message)}</p>`;$('viewList').innerHTML='';return}
+  const sum=k=>d.days.reduce((s,x)=>s+(k(x)||0),0);
+  const visits=sum(x=>Object.keys(x).filter(k=>k.startsWith('visit_')).reduce((s,k)=>s+x[k],0));
+  $('kpi').innerHTML=[['30일 방문',visits],['검색으로',sum(x=>x.visit_search)],['카톡으로',sum(x=>x.visit_kakao)],['QR로',sum(x=>x.visit_qr)],['전화 누름',sum(x=>x.tel)],['문의',sum(x=>x.inquiry)],['연락처 저장',sum(x=>x.vcard)],['할부 계산',sum(x=>x.calc)]]
+    .map(([k,v])=>`<div><span>${k}</span><b class="big">${v}</b></div>`).join('');
+  $('inqList').innerHTML=d.inquiries.length?d.inquiries.map(r=>`<div class="item ${r.done?'done':''}"><div class="top"><b>${esc(r.name||'')} · <a href="tel:${esc(r.phone)}">${esc(r.phone)}</a></b><span class="meta">${esc((r.ts||'').slice(0,10))} · ${esc(r.inquiry_type||'개인')} · ${SRC[r.source]||''}</span></div>
+    <p class="meta">${[r.model&&'차종 '+r.model,r.visit_date&&'희망 '+r.visit_date+' '+(r.visit_time||''),r.company,r.qty&&r.qty,r.deadline,r.to&&'링크: '+r.to].filter(Boolean).map(esc).join(' · ')}</p>
+    ${r.message?`<p>${esc(r.message)}</p>`:''}
+    <div class="row"><button class="btn sm" data-act="${r.done?'undone':'done'}" data-id="${esc(r.id)}">${r.done?'연락 전으로':'연락함'}</button><button class="btn ghost sm" data-act="delete" data-id="${esc(r.id)}">지우기</button></div></div>`).join(''):'<p class="hint">아직 문의가 없습니다.</p>';
+  $('viewList').innerHTML=d.views.length?d.views.map(v=>`<div class="item"><b>${esc(v.to)}</b> <span class="meta">${new Date(v.ts).toLocaleString('ko-KR')}</span></div>`).join(''):'<p class="hint">아직 없습니다. [링크·서명·NFC]에서 손님별 링크를 만들어 보내 보세요.</p>';
+  $('dayTable').innerHTML='<table><tr><th>날짜</th><th>방문</th><th>전화</th><th>문의</th></tr>'+d.days.slice().reverse().map(x=>`<tr><td>${x.date.slice(5)}</td><td>${Object.keys(x).filter(k=>k.startsWith('visit_')).reduce((s,k)=>s+x[k],0)}</td><td>${x.tel||0}</td><td>${x.inquiry||0}</td></tr>`).join('')+'</table>';
+  $('tgState').textContent=d.telegram?'텔레그램이 연결돼 있습니다. 문의·열람이 바로 오고, 매일 아침 9시에 요약이 갑니다.':'문의가 들어오거나 보내신 링크가 열리면 텔레그램으로 바로 알려 드립니다. 매일 아침 9시엔 어제 숫자와 아직 연락 안 한 문의를 보내 드립니다. 처음 한 번만: 텔레그램 앱 설치(무료·휴대폰 번호로 가입) → 아래 [텔레그램 연결] → 텔레그램에서 [시작].';
+  document.querySelectorAll('[data-act]').forEach(b=>b.onclick=async()=>{
+    if(DEMO) return alert('견본에서는 바뀌지 않습니다.');
+    if(b.dataset.act==='delete'&&!confirm('이 문의를 지울까요? 되살릴 수 없습니다.'))return;
+    try{await inbox('POST',{action:b.dataset.act,id:b.dataset.id});loadInbox()}catch(e){alert(e.message)}
+  });
+}
+$('inboxReload').onclick=loadInbox;
+$('tgOn').onclick=async()=>{
+  if(DEMO) return alert('견본에서는 연결되지 않습니다. 실제 홈페이지에서는 텔레그램 앱이 열리고 [시작]만 누르면 됩니다.');
+  try{const r=await inbox('POST',{action:'tgcode'});
+    if(!r.bot) return alert('알림 봇을 준비 중입니다. 소통마케팅센터에 말씀해 주세요.');
+    location.href=`https://t.me/${r.bot}?start=${r.code}`}catch(e){alert(e.message)}
+};
+$('tgOff').onclick=async()=>{if(DEMO)return;if(!confirm('텔레그램 알림을 끊을까요?'))return;try{await inbox('POST',{action:'tgoff'});loadInbox()}catch(e){alert(e.message)}};
+
+/* ── 이달 조건·재고 ── */
+let offers=[];
+function fillOffers(){offers=JSON.parse(JSON.stringify(cfg.offers||[]));drawOffers()}
+function drawOffers(){
+  $('offerList').innerHTML=offers.map((o,i)=>`<div class="item" data-i="${i}">
+    <div class="top"><select class="oKind" style="max-width:180px">${['이달 조건','재고 보유','사전 예약'].map(k=>`<option ${o.kind===k?'selected':''}>${k}</option>`).join('')}</select><button class="btn ghost sm oDel">빼기</button></div>
+    <label>제목</label><input type="text" class="oTitle" value="${esc(o.title)}">
+    <label>설명</label><textarea class="oDetail">${esc(o.detail)}</textarea>
+    <label>차종 (누르면 문의 폼에 차종이 채워집니다)</label><input type="text" class="oModel" value="${esc(o.model)}">
+    <label>마감일 (이 날이 지나면 저절로 내려감, 비우면 계속)</label><input type="date" class="oUntil" value="${esc(o.until)}">
+    ${o.example?'<p class="meta">견본 예시 표시가 붙어 있습니다. 실제 조건으로 고치면 저장할 때 표시가 빠집니다.</p>':''}</div>`).join('')||'<p class="hint">올린 조건이 없으면 홈페이지에서 이 칸이 안 보입니다.</p>';
+  document.querySelectorAll('.oDel').forEach(b=>b.onclick=()=>{offers.splice(+b.closest('.item').dataset.i,1);dirty=true;drawOffers()});
+}
+function readOffers(){return [...document.querySelectorAll('#offerList .item')].map(el=>{const o={kind:el.querySelector('.oKind').value,title:el.querySelector('.oTitle').value.trim(),detail:el.querySelector('.oDetail').value.trim(),model:el.querySelector('.oModel').value.trim()};const u=el.querySelector('.oUntil').value;if(u)o.until=u;return o}).filter(o=>o.title)}
+$('offerAdd').onclick=()=>{offers=readOffers();offers.push({kind:'이달 조건',title:'',detail:'',model:''});dirty=true;drawOffers()};
+async function saveOffers(){const v=readOffers();await saveConfig(c=>{c.offers=v},'관리 화면: 이달 조건 수정');return '저장했습니다 — 1~2분 뒤 홈페이지에 반영됩니다'}
+
+/* ── 출고 사진 ── */
+let dels=[];
+const img=p=>p.startsWith('blob:')?p:`${SITE}/${p}`;
+function fillDeliveries(){dels=JSON.parse(JSON.stringify(cfg.deliveries||[]));delPick.length=0;drawDel()}
+function drawDel(){
+  $('delList').innerHTML=dels.map((d,i)=>`<figure data-i="${i}"><img src="${esc(img(d.photo))}" alt=""><figcaption>
+    <input type="text" class="dModel" placeholder="차종" value="${esc(d.model)}"><input type="text" class="dWhen" placeholder="예) 2026년 11월" value="${esc(d.when)}"><input type="text" class="dNote" placeholder="한 줄 (선택)" value="${esc(d.note)}">
+    <div class="row"><button class="btn ghost sm dDel">빼기</button></div></figcaption></figure>`).join('')||'<p class="hint">사진이 없으면 홈페이지에서 이 칸이 안 보입니다.</p>';
+  document.querySelectorAll('.dDel').forEach(b=>b.onclick=()=>{readDel();dels.splice(+b.closest('figure').dataset.i,1);dirty=true;drawDel()});
+}
+function readDel(){document.querySelectorAll('#delList figure').forEach(f=>{const d=dels[+f.dataset.i];d.model=f.querySelector('.dModel').value.trim();d.when=f.querySelector('.dWhen').value.trim();d.note=f.querySelector('.dNote').value.trim()})}
+$('delAdd').onclick=()=>{if(confirm('손님께 홈페이지에 올려도 된다는 허락을 받으셨나요?'))$('delFile').click()};
+$('delFile').onchange=async()=>{const f=$('delFile').files[0];$('delFile').value='';if(!f)return;
+  try{const s=await shrink(f,1600);readDel();delPick.push(s);dels.unshift({photo:s.url,model:'',when:'',note:''});dirty=true;drawDel()}catch(e){alert('사진을 읽지 못했습니다.')}};
+async function saveDel(){
+  readDel();
+  for(const [n,p] of delPick.entries()){msg(`사진 올리는 중… (${n+1}/${delPick.length})`);const path=`assets/deliveries/${stamp()}${n}.jpg`;await put(path,p.b64,null,'관리 화면: 출고 사진 추가');dels.forEach(d=>{if(d.photo===p.url)d.photo=path})}
+  delPick.length=0;
+  await saveConfig(c=>{c.deliveries=dels},'관리 화면: 출고 사진 수정');return '저장했습니다 — 1~2분 뒤 홈페이지에 반영됩니다';
+}
+
+/* ── 글 (content/*.md) ── */
+function parseMd(raw){const m=raw.replace(/\r\n/g,'\n').match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);const meta={};if(m)m[1].split('\n').forEach(l=>{const i=l.indexOf(':');if(i>0)meta[l.slice(0,i).trim()]=l.slice(i+1).trim()});return {meta,body:m?m[2]:raw}}
+function joinMd(meta,body){return '---\n'+Object.entries(meta).filter(([,v])=>v).map(([k,v])=>`${k}: ${String(v).replace(/\n/g,' ')}`).join('\n')+'\n---\n'+body.replace(/\r\n/g,'\n').trim()+'\n'}
+async function loadPosts(){
+  $('postEd').hidden=true; $('savebar').hidden=true; curPost=null;
+  if(DEMO){$('postList').innerHTML='<p class="hint">견본에서는 글 목록을 불러오지 않습니다. 실제 홈페이지에서는 여기 글 제목이 쭉 나오고, 누르면 고칠 수 있습니다.</p>';return}
+  $('postList').innerHTML='<p class="hint">불러오는 중…</p>';
+  try{posts=(await gh('content?ref='+BRANCH)).filter(f=>f.name.endsWith('.md'));
+    const full=await Promise.all(posts.map(async f=>({f,...parseMd(b64dec((await gh(f.path+'?ref='+BRANCH)).content))})));
+    full.sort((a,b)=>(b.meta.date||'').localeCompare(a.meta.date||'')); posts=full;
+    $('postList').innerHTML=full.map((p,i)=>`<a href="#" data-p="${i}">${esc(p.meta.title||p.f.name)}<div class="d">${esc(p.meta.date||'')} · ${esc(p.meta.description||'')}</div></a>`).join('');
+    document.querySelectorAll('[data-p]').forEach(a=>a.onclick=e=>{e.preventDefault();editPost(posts[+a.dataset.p])});
+  }catch(e){$('postList').innerHTML=`<p class="hint">글을 못 불러왔습니다: ${esc(e.message)}</p>`}
+}
+function editPost(p){curPost=p;$('postEd').hidden=false;$('savebar').hidden=false;$('postDel').hidden=!p.f;
+  $('pTitle').value=p.meta.title||'';$('pDesc').value=p.meta.description||'';$('pBody').value=p.body||'';$('postEd').scrollIntoView({block:'start'})}
+$('postNew').onclick=()=>{if(DEMO)return alert('견본에서는 글이 저장되지 않습니다. 실제 홈페이지에서는 제목·요약·본문을 쓰고 [저장]을 누르면 됩니다.');editPost({f:null,meta:{date:today()},body:''})};
+async function savePost(){
+  const t=$('pTitle').value.trim(), d=$('pDesc').value.trim(); if(!t||!d) throw new Error('제목과 요약 한 줄을 채워 주세요');
+  const meta={...curPost.meta,title:t,description:d}; if(curPost.f) meta.updated=today();
+  const path=curPost.f?curPost.f.path:`content/post-${stamp().slice(0,12)}.md`;
+  await put(path,b64text(joinMd(meta,$('pBody').value)),curPost.f?.sha||await shaOf(path),'관리 화면: 글 '+(curPost.f?'수정':'쓰기')+' — '+t);
+  setTimeout(loadPosts,300); return '저장했습니다 — 1~2분 뒤 홈페이지에 올라갑니다';
+}
+$('postDel').onclick=async()=>{if(!curPost?.f||!confirm('이 글을 홈페이지에서 내릴까요?'))return;
+  try{await gh(curPost.f.path,{method:'DELETE',body:JSON.stringify({message:'관리 화면: 글 내림 — '+curPost.meta.title,sha:curPost.f.sha,branch:BRANCH})});loadPosts()}catch(e){alert(e.message)}};
+
+/* ── 첫 화면·연락처 ── */
+function fillProfile(){
+  $('fTag').value=cfg.tagline||'';$('fClaim').value=cfg.hero_claim||'';$('fPhone').value=cfg.phone||'';
+  $('fKakao').value=/xxxxxx/.test(cfg.kakao_url||'')?'':cfg.kakao_url||'';$('fYt').value=cfg.youtube_url||'';$('fFin').value=cfg.finance_notice||'';
+  $('chList').innerHTML=(cfg.channels||[]).map((c,i)=>`<label style="margin-top:6px">${esc(c.name)}</label><input type="url" class="chUrl" data-i="${i}" value="${esc(c.url)}" placeholder="https://">`).join('');
+  $('heroPrev').src=img(cfg.hero_image||'assets/hero.jpg'); heroPick=null;
+}
+$('heroFile').onchange=async()=>{const f=$('heroFile').files[0];if(!f)return;try{heroPick=await shrink(f,2000);$('heroPrev').src=heroPick.url;dirty=true}catch(e){alert('사진을 읽지 못했습니다.')}};
+async function saveProfile(){
+  const ph=$('fPhone').value.trim(); if(!/^0\d{1,2}-?\d{3,4}-?\d{4}$/.test(ph)) throw new Error('휴대폰 번호 형식을 확인해 주세요');
+  let heroPath=null;
+  if(heroPick){msg('사진 올리는 중…');heroPath=`assets/hero-${stamp()}.jpg`;await put(heroPath,heroPick.b64,null,'관리 화면: 첫 화면 사진')}
+  const ch=[...document.querySelectorAll('.chUrl')].map(el=>el.value.trim());
+  await saveConfig(c=>{c.tagline=$('fTag').value.trim();c.hero_claim=$('fClaim').value.trim();c.phone=ph;
+    if($('fKakao').value.trim())c.kakao_url=$('fKakao').value.trim();c.youtube_url=$('fYt').value.trim();c.finance_notice=$('fFin').value.trim();
+    (c.channels||[]).forEach((x,i)=>{if(ch[i]!==undefined)x.url=ch[i]}); if(heroPath)c.hero_image=heroPath},'관리 화면: 첫 화면·연락처 수정');
+  heroPick=null; return '저장했습니다 — 1~2분 뒤 반영됩니다. 카톡 미리보기 사진은 소통마케팅센터가 새로 만들어 드립니다';
+}
+
+/* ── 도구 ── */
+function fillTools(){
+  $('nfcUrl').textContent=SITE+'/?from=qr';
+  const s=`<table style="border:0;font-family:Arial,sans-serif;font-size:13px;color:#222"><tr><td style="border:0;padding:0;text-align:left"><b style="font-size:15px">${esc(cfg.name)}</b><br>${esc(cfg.brand||'')} 영업사원 · ${esc(cfg.region||'')}${cfg.dealership?'<br>'+esc(cfg.dealership):''}<br>☎ <a href="tel:${esc((cfg.phone||'').replace(/\D/g,''))}" style="color:#222">${esc(cfg.phone)}</a><br><a href="${esc(SITE)}/" style="color:#8a6a2c">${esc(HOST)}</a> — 차종·할부 계산·상담</td></tr></table>`;
+  $('sigBox').innerHTML=s; $('sigBox').dataset.html=s;
+}
+$('toMake').onclick=async()=>{
+  const n=$('toName').value.trim(); if(!n) return alert('손님 이름을 넣어 주세요.');
+  const url=`${SITE}/?to=${encodeURIComponent(n)}`;
+  $('toOut').innerHTML=`<code>${esc(url)}</code><br><span class="hint">아래 [보내기]를 누르면 카톡 등 공유 창이 열립니다.</span><div class="row"><button class="btn solid" id="toShare">보내기</button><button class="btn ghost" id="toCopy">복사</button></div>`;
+  $('toCopy').onclick=()=>navigator.clipboard.writeText(url).then(()=>alert('복사했습니다. 카톡에 붙여 넣으세요.'));
+  $('toShare').onclick=()=>navigator.share?navigator.share({title:cfg.name+' 상담 안내',url}).catch(()=>{}):navigator.clipboard.writeText(url).then(()=>alert('이 기기는 공유 창이 없어 복사했습니다.'));
+};
+$('sigCopy').onclick=async()=>{const h=$('sigBox').dataset.html;
+  try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([h],{type:'text/html'}),'text/plain':new Blob([$('sigBox').innerText],{type:'text/plain'})})]);alert('복사했습니다. 메일 서명 칸에 붙여 넣으세요.')}
+  catch(e){const r=document.createRange();r.selectNode($('sigBox'));getSelection().removeAllRanges();getSelection().addRange(r);document.execCommand('copy');alert('복사했습니다.')}};
+
+/* ── 저장 버튼 하나 ── */
+$('save').onclick=async()=>{
+  if(DEMO) return msg('견본에서는 저장되지 않습니다 — 실제 홈페이지에서는 1~2분 뒤 반영됩니다','err');
+  const fn=sec==='posts'?savePost:({offers:saveOffers,deliveries:saveDel,profile:saveProfile})[sec];
+  if(!fn) return; $('save').disabled=true;
+  try{const t=await fn();dirty=false;msg(t,'ok')}
+  catch(e){msg('저장 실패: '+e.message+' — 다시 [저장]을 눌러 주세요','err')}
+  finally{$('save').disabled=false}
+};
+
+/* ── 비밀번호 잠금 (파노라마뷰와 같은 방식): admin-key.json 에 이 저장소 전용 열쇠를 비밀번호로 잠가 둔다.
+   PBKDF2 60만 회 + AES-GCM. 비밀번호가 맞으면 브라우저 안에서만 풀린다. 우리 서버·글해줌 없이 동작. */
+const u8b64=u=>{let b='';u.forEach(x=>b+=String.fromCharCode(x));return btoa(b)};
+const b64u8=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function lockKey(pw,salt,iter){
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw.normalize('NFC')),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function seal(tok,pw){
+  const iter=600000, salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},await lockKey(pw,salt,iter),new TextEncoder().encode(tok)));
+  return {v:1,iter,salt:u8b64(salt),iv:u8b64(iv),ct:u8b64(ct)};
+}
+async function unseal(box,pw){return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64u8(box.iv)},await lockKey(pw,b64u8(box.salt),box.iter),b64u8(box.ct)))}
+let keyBox=null;
+if(!DEMO) fetch('admin-key.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(b=>{keyBox=b&&b.ct?b:null;
+  if(!keyBox){$('pwHint').textContent='아직 비밀번호가 정해지지 않았습니다. 처음 한 번은 관리자가 아래 「관리자용」으로 연결해 비밀번호를 정해 주세요.';$('adv').open=true}}).catch(()=>{});
+async function pwLogin(){
+  const pw=$('pw').value; if(!pw) return; if(!keyBox) return alert('아직 비밀번호가 정해지지 않았습니다.');
+  $('pwGo').disabled=true; $('pwGo').textContent='확인 중…';
+  try{let tok;try{tok=await unseal(keyBox,pw)}catch(e){throw new Error('비밀번호가 맞지 않습니다.')}
+    sessionStorage.setItem(KEY,tok);
+    try{await gh('config.json?ref='+BRANCH)}catch(e){sessionStorage.removeItem(KEY);throw new Error('비밀번호는 맞는데 열쇠가 만료됐거나 지워졌습니다. 관리자에게 비밀번호를 다시 정해 달라고 하세요.')}
+    $('pw').value=''; gate();
+  }catch(e){alert(e.message)}finally{$('pwGo').disabled=false;$('pwGo').textContent='들어가기'}
+}
+$('pwGo').onclick=pwLogin; $('pw').addEventListener('keydown',e=>{if(e.key==='Enter')pwLogin()});
+$('pwSet').onclick=async()=>{
+  if(DEMO) return alert('견본에는 비밀번호가 없습니다.');
+  const k=(prompt('영업사원이 쓸 GitHub 토큰을 붙여 넣어 주세요.\n(이 홈페이지 저장소 하나만 · Contents 읽기/쓰기 · 새로 만든 것)')||'').trim(); if(!k) return;
+  try{const r=await fetch(API+'config.json?ref='+BRANCH,{headers:{Authorization:'Bearer '+k,Accept:'application/vnd.github+json'}});if(!r.ok)throw 0}
+  catch(e){return alert('이 열쇠로는 이 홈페이지에 연결되지 않습니다. 저장소 선택과 권한(Contents 읽기/쓰기)을 확인해 주세요.')}
+  const p1=prompt('새 비밀번호 (10자 이상, 글자와 숫자를 섞어 주세요. 예: 토레스상담아침7시)\n이름·전화번호처럼 홈페이지에 적힌 말은 넣지 마세요.'); if(!p1) return;
+  const digits=(cfg?.phone||'').replace(/\D/g,'');
+  // 잠긴 열쇠 파일은 공개 주소에 있어 누구나 받아 대입해 볼 수 있다 → 길이가 가장 큰 방어. 10자 이상 + 글자·숫자 섞기
+  if(p1.length<10||!/\d/.test(p1)||!/[^\d\s]/.test(p1)) return alert('10자 이상, 글자와 숫자를 섞어 주세요. 이 비밀번호 하나로 홈페이지를 고칠 수 있어서 짧으면 위험합니다.');
+  if((digits&&p1.includes(digits.slice(-4)))||(cfg?.name&&p1.includes(cfg.name))) return alert('홈페이지에 적힌 이름·전화번호가 들어가면 누구나 맞혀 볼 수 있습니다.');
+  if(prompt('한 번 더 넣어 주세요')!==p1) return alert('두 번 넣은 비밀번호가 다릅니다.');
+  try{alert('비밀번호 잠금을 저장합니다. 10초쯤 걸릴 수 있습니다.');const box=await seal(k,p1);
+    await put('admin-key.json',b64text(JSON.stringify(box)),await shaOf('admin-key.json'),'관리 화면: 비밀번호 설정');keyBox=box;
+    alert('비밀번호를 정했습니다. 1~2분 뒤부터 이 비밀번호로 들어갈 수 있습니다.\n\n영업사원께는 주소와 비밀번호만 알려 주세요:\n'+location.href.split('#')[0]);
+  }catch(e){alert('저장 실패: '+e.message)}
+};
+$('demoNote').hidden=!DEMO; if(DEMO){$('gate').hidden=true}
+gate();
+</script>
+</body>
+</html>

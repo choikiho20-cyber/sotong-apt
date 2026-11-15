@@ -1,0 +1,58 @@
+{
+  "brand": "현대자동차",
+  "note": "차종명·카탈로그 주소는 2026-09-10 현대 공식 사이트(hyundai.com/kr/ko/e/vehicles)에서 직접 확인한 값입니다. 라인업은 수시로 바뀌므로 새 고객을 받을 때 다시 확인하십시오.",
+  "photo_note": "assets/models/<차종명>.jpg 가 있으면 그 사진이 쓰이고, 없으면 생성 배경 아트가 쓰입니다. 제조사 공식 이미지 대신 영업사원이 전시장에서 직접 찍은 세로 사진(3:5)을 쓰십시오.",
+  "catalog_note": "기아와 달리 현대는 PDF 직링크가 아니라 차종별 카탈로그 페이지로 연결합니다. 페이지 안에서 PDF를 바로 볼 수 있고, 주소가 바뀌어도 페이지 쪽이 덜 깨집니다. 분기마다 curl -sI <주소> 로 200을 확인하십시오.",
+  "copy_note": "설명은 제원·연비 같은 숫자를 넣지 않고 '누구에게 맞는 차인가'만 씁니다. 숫자는 연식마다 바뀌고 틀리면 그 자리에서 신뢰가 깨집니다. 영업사원 본인이 자기 말투로 고치는 것을 전제로 한 초안입니다.",
+
+  "featured": {
+    "name": "팰리세이드",
+    "copy": "7인승과 8인승 중 무엇을 고를지는 좌석 수가 아니라 '2열을 어떻게 쓰실 것인가'로 갈립니다.",
+    "note": "2열 독립시트로 가면 3열 진입이 편해지고, 벤치로 가면 태울 수 있는 인원이 늘어납니다. 가족 구성과 주로 태우실 분들을 먼저 듣고 좁혀 드립니다."
+  },
+
+  "groups": [
+    {
+      "name": "승용",
+      "models": [
+        { "name": "아반떼", "copy": "주차와 유지비를 먼저 보신다면 여기서 시작합니다. 첫 차로 가장 많이 나갑니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/the-all-new-avante/catalog" },
+        { "name": "쏘나타", "copy": "출퇴근이 길고 고속도로를 자주 타신다면 세단 쪽이 편합니다. SUV와 고민되시면 그 기준부터 정리해 드립니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/sonata-the-edge/catalog" },
+        { "name": "그랜저", "copy": "뒷좌석에 어른을 자주 태우시는 분들이 결국 여기로 오십니다. 의전이나 장거리 동승이 잦은지 먼저 여쭤봅니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/the-new-grandeur/catalog" }
+      ]
+    },
+    {
+      "name": "SUV",
+      "models": [
+        { "name": "베뉴", "copy": "가장 작은 SUV입니다. 좁은 골목과 주차가 매일 걸리는 분들이 찾습니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/venue/catalog" },
+        { "name": "코나", "copy": "SUV는 타고 싶은데 큰 차는 부담스러우신 분들의 출발점입니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/kona/catalog" },
+        { "name": "투싼", "copy": "가장 무난한 선택지라 비교의 기준점으로 삼기 좋습니다. 어디서부터 봐야 할지 모르겠으면 여기서 시작하셔도 됩니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/tucson/catalog" },
+        { "name": "싼타페", "copy": "아이가 있고 짐이 많은 집에서 가장 많이 찾습니다. 하이브리드는 대기가 길어질 수 있어 시기를 먼저 확인합니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/santafe/catalog" },
+        { "name": "팰리세이드", "copy": "7인승과 8인승은 좌석 수가 아니라 2열을 어떻게 쓰실지로 갈립니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/palisade/catalog" }
+      ]
+    },
+    {
+      "name": "MPV",
+      "models": [
+        { "name": "스타리아", "copy": "사람을 많이 태우거나 짐을 크게 실어야 하는 일에 씁니다. 승합 등록 요건을 먼저 확인해 드립니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/the-new-staria/catalog" }
+      ]
+    },
+    {
+      "name": "전기·수소",
+      "models": [
+        { "name": "아이오닉 5", "copy": "전기차를 처음 타보시는 분들이 가장 많이 고르는 크기입니다. 보조금까지 넣고 계산해 드립니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/ioniq5/catalog" },
+        { "name": "아이오닉 6", "copy": "세단 형태의 전기차를 찾으신다면 여기입니다. 충전 환경부터 확인하고 넘어갑니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/the-new-ioniq6/catalog" },
+        { "name": "아이오닉 9", "copy": "전기차인데 3열이 필요하신 경우입니다. 충전 환경이 안 되면 권해드리지 않습니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/ioniq9/catalog" },
+        { "name": "코나 일렉트릭", "copy": "짧은 거리를 자주 다니고 집이나 직장에 충전이 가능하다면 유지비 차이가 큽니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/kona-electric/catalog" },
+        { "name": "넥쏘", "copy": "수소차라 충전소 위치가 먼저입니다. 생활 동선에 충전소가 없으면 권해드리지 않습니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/nexo/catalog" }
+      ]
+    },
+    {
+      "name": "상용",
+      "models": [
+        { "name": "포터 2", "copy": "일에 쓰는 차입니다. 적재 중량과 특장 필요 여부를 먼저 정해야 견적이 나옵니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/porter2/catalog" },
+        { "name": "포터 2 일렉트릭", "copy": "하루 주행거리와 충전 여건, 보조금을 같이 계산해야 답이 나옵니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/porter2-electric/catalog" },
+        { "name": "ST1", "copy": "배송·물류 목적으로 설계된 전기 상용차입니다. 적재 방식과 운행 패턴을 듣고 판단합니다.", "catalog": "https://www.hyundai.com/kr/ko/e/vehicles/st1/catalog" }
+      ]
+    }
+  ]
+}

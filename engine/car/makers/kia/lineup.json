@@ -1,0 +1,60 @@
+{
+  "brand": "기아",
+  "note": "취급 라인업. 현대·KGM·르노 영업사원이면 이 파일만 갈아끼우면 됩니다. 차종명·카탈로그 주소는 2026-08-29 기아 공식 카탈로그/가격표 페이지(kia.com/kr/vehicles/catalog-price)에서 직접 확인한 값입니다.",
+  "photo_note": "assets/models/<차종명>.jpg 파일이 있으면 그 사진이 쓰이고, 없으면 생성 배경 아트가 쓰입니다. 제조사 공식 이미지 대신 영업사원이 전시장에서 직접 찍은 세로 사진(3:5)을 쓰십시오.",
+  "catalog_note": "카탈로그 PDF는 기아 서버 주소로 '연결'만 합니다. 내려받아 우리 서버에 올리면 무단 복제·배포가 됩니다. 주소가 바뀌면 링크가 깨지므로 분기마다 확인하십시오 (curl -sI <주소> 로 200 확인). 비워두면 카탈로그 버튼이 아예 안 나옵니다.",
+  "copy_note": "설명은 제원·연비 같은 숫자를 넣지 않고 '누구에게 맞는 차인가'만 씁니다. 숫자는 연식마다 바뀌고 틀리면 그 자리에서 신뢰가 깨집니다. 영업사원 본인이 자기 말투로 고치는 것을 전제로 한 초안입니다.",
+
+  "featured": {
+    "name": "카니발",
+    "copy": "7명이 타는 차를 고를 때 실제로 갈리는 건 좌석 수가 아니라 '3열에 어른이 앉는가'입니다.",
+    "note": "트림에 따라 3열 공간과 시트 구성이 달라집니다. 가족 구성과 주로 태우실 분들을 먼저 듣고 트림을 좁혀 드립니다. 카탈로그를 먼저 보실 필요 없습니다."
+  },
+
+  "groups": [
+    {
+      "name": "승용",
+      "models": [
+        { "name": "모닝", "copy": "주차가 빠듯한 골목이나 좁은 주차장을 매일 상대하신다면 여기서부터 봅니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_morning.pdf" },
+        { "name": "레이", "copy": "짐을 자주 싣거나 반려동물을 태우신다면, 같은 크기라도 네모난 쪽이 훨씬 넓게 쓰입니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_ray.pdf" },
+        { "name": "K5", "copy": "출퇴근이 길고 고속도로를 자주 타신다면 세단 쪽이 편합니다. SUV와 고민되시면 그 기준부터 정리해 드립니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_k5.pdf" },
+        { "name": "K8", "copy": "뒷좌석에 어른을 자주 태우시는 분들이 결국 여기로 오십니다. 동승이 잦은지 먼저 여쭤봅니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_k8.pdf" },
+        { "name": "K9", "copy": "가장 윗급입니다. 뒷좌석 중심으로 쓰실 계획인지에 따라 트림이 크게 갈립니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_k9.pdf" }
+      ]
+    },
+    {
+      "name": "SUV·RV",
+      "models": [
+        { "name": "셀토스", "copy": "SUV는 타고 싶은데 큰 차는 부담스러우신 분들의 출발점입니다. 첫 SUV로 가장 많이 나갑니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_seltos.pdf" },
+        { "name": "니로", "copy": "연비를 가장 중요하게 보신다면 여기부터 봅니다. 하이브리드와 전기차 중 어느 쪽이 맞는지는 충전 환경부터 확인해야 합니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_niro.pdf" },
+        { "name": "스포티지", "copy": "가장 무난한 선택지라 비교의 기준점으로 삼기 좋습니다. 어디서부터 봐야 할지 모르겠으면 여기서 시작하셔도 됩니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_sportage.pdf" },
+        { "name": "쏘렌토", "copy": "아이가 있고 짐이 많은 집에서 가장 많이 찾습니다. 하이브리드는 대기가 길어질 수 있어 시기를 먼저 확인합니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_sorento.pdf" },
+        { "name": "타스만", "copy": "짐칸이 따로 필요한 일을 하신다면 승합·화물과 함께 비교해야 합니다. 용도에 따라 세금과 보험이 달라집니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_tasman.pdf" }
+      ]
+    },
+    {
+      "name": "MPV",
+      "models": [
+        { "name": "카니발", "copy": "7명이 타는 차에서 실제로 갈리는 건 좌석 수가 아니라 3열에 어른이 앉는가입니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_carnival.pdf" },
+        { "name": "카니발 하이리무진", "copy": "의전이나 장거리 이동이 업무의 일부라면 일반 트림과 다른 차로 보셔야 합니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_carnival-hi-limousine.pdf" }
+      ]
+    },
+    {
+      "name": "전기차",
+      "models": [
+        { "name": "레이 EV", "copy": "짧은 거리를 자주 다니고 집이나 직장에 충전이 가능하다면 유지비 차이가 큽니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_ray-ev.pdf" },
+        { "name": "EV3", "copy": "전기차를 처음 타보시는 분들이 가장 많이 고르는 크기입니다. 보조금까지 넣고 계산해 드립니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_ev3.pdf" },
+        { "name": "EV4", "copy": "세단 형태의 전기차를 찾으신다면 여기입니다. 충전 환경부터 확인하고 넘어갑니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_ev4.pdf" },
+        { "name": "EV5", "copy": "전기 SUV 중간 크기입니다. EV3와 EV6 사이에서 고민되시면 쓰시는 거리부터 여쭤봅니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_ev5.pdf" },
+        { "name": "EV6", "copy": "장거리를 자주 뛰신다면 충전 속도가 실제 체감에 크게 작용합니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_ev6.pdf" },
+        { "name": "EV9", "copy": "전기차인데 3열이 필요하신 경우입니다. 충전 환경이 안 되면 권해드리지 않습니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_ev9.pdf" }
+      ]
+    },
+    {
+      "name": "상용",
+      "models": [
+        { "name": "봉고Ⅲ EV", "copy": "일에 쓰는 차입니다. 하루 주행거리와 충전 여건, 보조금을 같이 계산해야 답이 나옵니다.", "catalog": "https://www.kia.com/content/dam/kwp/kr/ko/vehicles/pdf/catalog/catalog_bongo3-ev.pdf" }
+      ]
+    }
+  ]
+}

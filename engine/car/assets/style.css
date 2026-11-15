@@ -1,0 +1,487 @@
+/* 자동차 영업사원 개인 홈페이지 — premium-dark
+   조사 근거: Philip Scheinfeld(검정 배경·실적 선행), Kumara Wilcoxon(100vh 히어로·58px 숫자),
+   Polestar/Genesis(모서리 0·테두리 버튼·풀블리드). 고객별 커스텀 금지, 테마로만 갈아끼운다. */
+
+:root {
+  --bg: #0a0b0d;
+  --surface: #14161a;
+  --surface-2: #1c1f24;
+  --text: #f4f5f6;
+  --mute: #8c9199;
+  --line: rgba(255, 255, 255, .14);
+  --line-soft: rgba(255, 255, 255, .07);
+  --gold: #c9a227;
+  --on-solid: #0a0b0d;
+  /* 사진 위에 글씨를 얹기 위한 막(scrim). 테마가 뒤집히면 이것도 같이 뒤집혀야 한다 —
+     안 그러면 밝은 테마에서 검은 막 위에 검은 글씨가 올라간다. */
+  --scrim-strong: rgba(10, 11, 13, .72);
+  --scrim-soft: rgba(10, 11, 13, .30);
+  --scrim-card: rgba(10, 11, 13, .92);
+  --ph-bg:
+    radial-gradient(120% 90% at 70% 10%, #2a2f36 0%, transparent 55%),
+    radial-gradient(90% 70% at 15% 90%, #21262c 0%, transparent 60%),
+    linear-gradient(160deg, #16191d 0%, #0c0e11 100%);
+  --ph-ink: rgba(255, 255, 255, .38);
+  --ph-line: rgba(255, 255, 255, .18);
+  --kr: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
+  --en: "Oswald", var(--kr);
+  --pad: clamp(80px, 11vw, 152px);
+  --gut: clamp(20px, 4vw, 40px);
+}
+
+/* 밝은 테마 (현대·기아 대중 라인용). config의 theme으로 붙는다 */
+[data-theme="bright"] {
+  --bg: #ffffff;
+  --surface: #f2f4f6;
+  --surface-2: #e8ebee;
+  --text: #101317;
+  --mute: #5f666e;
+  --line: rgba(16, 19, 23, .16);
+  --line-soft: rgba(16, 19, 23, .08);
+  --gold: #8a6d1f;
+  --on-solid: #ffffff;
+  --scrim-strong: rgba(255, 255, 255, .86);
+  --scrim-soft: rgba(255, 255, 255, .42);
+  --scrim-card: rgba(255, 255, 255, .94);
+  --ph-bg:
+    radial-gradient(120% 90% at 70% 10%, #e3e8ed 0%, transparent 55%),
+    radial-gradient(90% 70% at 15% 90%, #dfe4ea 0%, transparent 60%),
+    linear-gradient(160deg, #eef1f4 0%, #dde2e8 100%);
+  --ph-ink: rgba(16, 19, 23, .45);
+  --ph-line: rgba(16, 19, 23, .18);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--kr);
+  font-size: 16px;
+  line-height: 1.75;
+  word-break: keep-all;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+img, video { display: block; max-width: 100%; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 var(--gut); }
+.narrow { max-width: 760px; }
+
+/* ---------- 공통 타이포 ---------- */
+.eyebrow {
+  font-family: var(--en); font-size: 12px; font-weight: 400;
+  letter-spacing: .3em; text-transform: uppercase; color: var(--gold);
+}
+.sec-title {
+  font-size: clamp(28px, 4.4vw, 46px); font-weight: 700;
+  letter-spacing: -.025em; line-height: 1.25; margin: 18px 0 0;
+}
+.sec-desc { color: var(--mute); margin-top: 18px; max-width: 56ch; }
+.sec { padding: var(--pad) 0; }
+.rule { height: 1px; background: var(--line-soft); border: 0; }
+
+/* ---------- 버튼 ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  border: 1px solid currentColor; border-radius: 0;
+  padding: 17px 30px; font-size: 13px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  font-family: var(--en); white-space: nowrap;
+  transition: background .18s, color .18s;
+}
+.btn::after { content: "→"; font-family: var(--kr); }
+.btn-solid { background: var(--text); color: var(--on-solid); border-color: var(--text); }
+.btn-solid:hover { background: transparent; color: var(--text); }
+.btn-line:hover { background: var(--text); color: var(--on-solid); }
+.btn-kakao { background: #fee500; color: #191919; border-color: #fee500; }
+.btn-kakao:hover { background: transparent; color: #fee500; }
+
+/* ---------- 사진 자리 ---------- */
+/* 실사진이 들어오기 전까지 쓰는 자리표시자. 회색 네모가 아니라 의도된 화면처럼 보이게 해서
+   레이아웃 검토가 사진 유무에 흔들리지 않게 한다. */
+.ph {
+  position: relative;
+  background: var(--ph-bg);
+}
+.ph::after {
+  content: attr(data-ph);
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  font-family: var(--en); font-size: 11px; letter-spacing: .24em; text-transform: uppercase;
+  color: var(--ph-ink); border: 1px solid var(--ph-line);
+  padding: 9px 16px; white-space: nowrap;
+}
+
+/* ---------- 히어로 ---------- */
+.hero { position: relative; min-height: 100svh; display: flex; align-items: flex-end; overflow: hidden; }
+.hero-media { position: absolute; inset: 0; }
+.hero-media img, .hero-media video { width: 100%; height: 100%; object-fit: cover; object-position: 66% 22%; /* 인물이 오른쪽에 선 구도 기준. 얼굴이 위쪽이라 세로도 올림 */ }
+.hero-media::before {
+  content: ""; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(to top, var(--bg) 2%, var(--scrim-strong) 38%, var(--scrim-soft) 100%);
+}
+.hero-inner { position: relative; z-index: 2; width: 100%; padding-bottom: clamp(56px, 9vw, 104px); }
+.hero-claim {
+  font-family: var(--en); font-size: clamp(13px, 1.6vw, 17px); font-weight: 500;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--gold); margin-bottom: 20px;
+}
+.hero-name {
+  font-size: clamp(58px, 13vw, 148px); font-weight: 800;
+  letter-spacing: -.045em; line-height: .9;
+}
+.hero-role {
+  margin-top: 22px; font-size: clamp(15px, 1.9vw, 20px); color: var(--text);
+  font-weight: 500; max-width: 30ch;
+}
+.hero-sub { margin-top: 12px; color: var(--mute); max-width: 44ch; font-size: 15px; }
+.hero-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 38px; }
+.scroll-hint {
+  position: absolute; right: var(--gut); bottom: clamp(56px, 9vw, 104px); z-index: 2;
+  font-family: var(--en); font-size: 11px; letter-spacing: .24em; color: var(--mute);
+  writing-mode: vertical-rl; display: none;
+}
+@media (min-width: 900px) { .scroll-hint { display: block; } }
+
+/* ---------- 실적 숫자 ---------- */
+/* 조사에서 가장 크게 갈린 지점. 설명이 아니라 증명이 먼저 온다. */
+.stats { border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; }
+.stat {
+  padding: clamp(30px, 5vw, 52px) clamp(16px, 3vw, 30px);
+  border-right: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft);
+}
+.stat:nth-child(2n) { border-right: 0; }
+.stat:nth-last-child(-n+2) { border-bottom: 0; }
+.stat-value {
+  font-family: var(--en); font-weight: 500;
+  font-size: clamp(38px, 7vw, 72px); line-height: 1; letter-spacing: -.01em;
+}
+.stat-value .unit { font-family: var(--kr); font-size: .4em; font-weight: 600; margin-left: 4px; letter-spacing: 0; }
+.stat-label { margin-top: 12px; font-size: 13px; color: var(--mute); letter-spacing: .02em; }
+@media (min-width: 860px) {
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
+  .stat:nth-child(2n) { border-right: 1px solid var(--line-soft); }
+  .stat { border-bottom: 0; }
+  .stat:last-child { border-right: 0; }
+}
+
+/* ---------- 소개 ---------- */
+.about { display: grid; gap: clamp(32px, 5vw, 64px); }
+.about-lead { font-size: clamp(19px, 2.4vw, 27px); font-weight: 600; letter-spacing: -.02em; line-height: 1.55; }
+.about-body { color: var(--mute); }
+.career { list-style: none; margin-top: 30px; border-top: 1px solid var(--line-soft); }
+.career li {
+  padding: 15px 0; border-bottom: 1px solid var(--line-soft);
+  color: var(--mute); font-size: 15px; display: flex; gap: 14px;
+}
+.career li::before { content: "—"; color: var(--gold); flex: none; }
+@media (min-width: 900px) { .about { grid-template-columns: 1.05fr 1fr; align-items: start; } }
+
+/* ---------- 대표 차종 (풀블리드) ---------- */
+.feature { position: relative; min-height: 88svh; display: flex; align-items: flex-end; overflow: hidden; }
+.feature-media { position: absolute; inset: 0; }
+.feature-media img { width: 100%; height: 100%; object-fit: cover; }
+.feature-media::before {
+  content: ""; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(to top, var(--bg) 0%, var(--scrim-strong) 45%, transparent 85%);
+}
+.feature-inner { position: relative; z-index: 2; width: 100%; padding-bottom: clamp(48px, 7vw, 88px); }
+.feature-name { font-size: clamp(40px, 8vw, 96px); font-weight: 800; letter-spacing: -.04em; line-height: .95; }
+.feature-copy { margin-top: 20px; color: var(--text); max-width: 46ch; font-size: clamp(15px, 1.8vw, 18px); }
+.feature-note { margin-top: 10px; color: var(--mute); max-width: 50ch; font-size: 14px; }
+button.btn { background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.feature-player { margin: 22px 0 6px; aspect-ratio: 16 / 9; width: 100%; max-width: 760px; background: #000; border: 1px solid var(--line); }
+.feature-player iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+/* ---------- 차종 목록 ---------- */
+.finder-bar { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 32px; }
+.finder-bar input {
+  flex: 1 1 260px; background: transparent; border: 0; border-bottom: 1px solid var(--line);
+  color: var(--text); font-family: var(--kr); font-size: 16px; padding: 14px 2px;
+}
+.finder-bar input::placeholder { color: var(--mute); }
+.finder-bar input:focus { outline: none; border-bottom-color: var(--gold); }
+.finder-empty { margin-top: 18px; color: var(--mute); font-size: 14px; }
+
+.model-group { margin-top: clamp(38px, 6vw, 64px); }
+.model-group h3 {
+  font-family: var(--en); font-size: 12px; font-weight: 400; letter-spacing: .26em;
+  text-transform: uppercase; color: var(--mute); padding-bottom: 14px; border-bottom: 1px solid var(--line-soft);
+}
+.model-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-top: 2px; }
+@media (min-width: 700px) { .model-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1000px) { .model-grid { grid-template-columns: repeat(4, 1fr); } }
+.model-grid { perspective: 900px; }
+.model {
+  position: relative; aspect-ratio: 3 / 5; overflow: hidden; background: var(--surface);
+  transform-style: preserve-3d; will-change: transform;
+  transition: transform .35s ease, box-shadow .35s ease;
+}
+/* 마우스를 따라 카드가 기운다 (기아 사이트의 차량 회전에서 가져온 감각).
+   각도는 JS가 --rx/--ry로 넣는다. 터치·모션최소화에서는 JS가 아예 안 붙는다. */
+.model.tilt {
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(1.02);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .35);
+  z-index: 2;
+}
+.model-hit { position: absolute; inset: 0; display: flex; align-items: flex-end; }
+.model img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.model::before {
+  content: ""; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(to top, var(--scrim-card) 0%, transparent 62%);
+}
+.model-info { position: relative; z-index: 2; padding: 18px 16px; width: 100%; }
+.model-name {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  font-size: clamp(15px, 1.7vw, 19px); font-weight: 700; letter-spacing: -.02em;
+}
+.model-name::after { content: "→"; color: var(--gold); font-weight: 400; opacity: 0; transition: opacity .2s, transform .2s; }
+/* 영업사원이 직접 쓴 한 줄. 제조사가 못 쓰는 문장이라 이게 차별점이다.
+   좁은 화면에서는 카드 폭이 170px 남짓이라 읽히지 않으므로 감춘다. */
+.model-copy { display: none; }
+@media (min-width: 700px) {
+  .model-copy {
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    margin-top: 8px; font-size: 13px; line-height: 1.55; color: var(--mute); font-weight: 400;
+    /* 설명 길이가 카드마다 달라도 차종명 높이는 한 줄로 맞춘다 —
+       안 그러면 격자에서 이름이 들쭉날쭉해 조잡해 보인다 */
+    min-height: calc(13px * 1.55 * 3);
+  }
+}
+/* 카탈로그는 기아 서버 PDF로 바로 열린다 — 제조사 사이트의 견적 유도 화면을 안 거친다 */
+.model-cat {
+  position: absolute; z-index: 3; top: 10px; right: 10px;
+  font-family: var(--en); font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+  padding: 7px 10px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--text);
+  opacity: .82; transition: opacity .18s, background .18s, color .18s;
+}
+.model-cat::after { content: " ↗"; color: var(--gold); }
+.model-cat:hover { opacity: 1; background: var(--text); color: var(--on-solid); }
+.model-cat:hover::after { color: var(--on-solid); }
+.model:hover img { transform: scale(1.06); }
+.model:hover .model-name::after { opacity: 1; transform: translateX(3px); }
+.model[hidden] { display: none; }
+.model .ph::after { font-size: 9px; padding: 6px 10px; letter-spacing: .18em; }
+
+/* ---------- 상황 카드 ---------- */
+.cards { display: grid; gap: 2px; margin-top: 44px; }
+@media (min-width: 760px) { .cards { grid-template-columns: 1fr 1fr; } }
+.card {
+  background: var(--surface); padding: clamp(28px, 4vw, 44px);
+  display: flex; flex-direction: column; transition: background .2s;
+}
+.card h3 { font-size: clamp(18px, 2.2vw, 23px); font-weight: 700; letter-spacing: -.02em; }
+.card p { margin-top: 14px; color: var(--mute); font-size: 15px; flex: 1; }
+.card-more {
+  margin-top: 26px; font-family: var(--en); font-size: 12px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--gold);
+}
+.card-more::after { content: " →"; }
+a.card:hover { background: var(--surface-2); }
+/* 커서(손가락) 위치를 따라 금빛이 번지고 테두리가 빛난다. 위치는 index.html 스크립트가 --x·--y로 넘긴다 */
+.card { position: relative; isolation: isolate; }
+.card::before, .card::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .35s;
+}
+.card::before { background: radial-gradient(340px circle at var(--x, 50%) var(--y, 50%), rgba(201, 162, 39, .14), transparent 70%); }
+.card::after {
+  padding: 1px; background: radial-gradient(240px circle at var(--x, 50%) var(--y, 50%), rgba(232, 196, 94, .85), transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.card:hover::before, .card:hover::after, .card:active::before, .card:active::after { opacity: 1; }
+
+/* ---------- 원칙 · 절차 ---------- */
+.principles { margin-top: 44px; border-top: 1px solid var(--line-soft); }
+.principle { padding: clamp(24px, 3.4vw, 38px) 0; border-bottom: 1px solid var(--line-soft); display: grid; gap: 10px; }
+.principle h3 { font-size: clamp(18px, 2.2vw, 24px); font-weight: 700; letter-spacing: -.02em; }
+.principle p { color: var(--mute); font-size: 15px; }
+@media (min-width: 860px) { .principle { grid-template-columns: 1fr 1.3fr; gap: 40px; } }
+
+.steps { margin-top: 44px; display: grid; gap: 2px; }
+@media (min-width: 760px) { .steps { grid-template-columns: repeat(4, 1fr); } }
+.step { background: var(--surface); padding: clamp(26px, 3.4vw, 36px); }
+.step-no { font-family: var(--en); font-size: 13px; letter-spacing: .2em; color: var(--gold); }
+.step h3 { margin-top: 16px; font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+.step p { margin-top: 10px; color: var(--mute); font-size: 14.5px; }
+
+/* ---------- 글 목록 ---------- */
+.post-list { margin-top: 44px; border-top: 1px solid var(--line); }
+.post-row {
+  display: grid; gap: 6px; padding: clamp(24px, 3.2vw, 34px) 0;
+  border-bottom: 1px solid var(--line-soft); transition: padding-left .25s, border-color .25s;
+}
+.post-row:hover { padding-left: 14px; border-bottom-color: var(--gold); }
+.post-no { font-family: var(--en); font-size: 12px; letter-spacing: .2em; color: var(--gold); }
+.post-title { font-size: clamp(19px, 2.4vw, 26px); font-weight: 700; letter-spacing: -.025em; line-height: 1.35; }
+.post-desc { color: var(--mute); font-size: 14.5px; max-width: 62ch; }
+@media (min-width: 900px) {
+  .post-row { grid-template-columns: 90px 1fr 1fr; gap: 30px; align-items: baseline; }
+  .post-desc { margin: 0; }
+}
+
+/* ---------- FAQ ---------- */
+.faq-list { margin-top: 44px; border-top: 1px solid var(--line); }
+.faq { border-bottom: 1px solid var(--line-soft); }
+.faq summary {
+  list-style: none; cursor: pointer; padding: 24px 44px 24px 0; position: relative;
+  font-size: clamp(16px, 1.9vw, 19px); font-weight: 600; letter-spacing: -.015em;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: ""; position: absolute; right: 6px; top: 50%; width: 9px; height: 9px;
+  border-right: 1px solid var(--gold); border-bottom: 1px solid var(--gold);
+  transform: translateY(-70%) rotate(45deg); transition: transform .2s;
+}
+.faq[open] summary::after { transform: translateY(-30%) rotate(-135deg); }
+.faq p { color: var(--mute); font-size: 15px; padding: 0 0 26px; max-width: 68ch; }
+
+/* ---------- 문의 ---------- */
+/* 개인 / 법인·대량 전환 — 법인 담당자는 필요한 칸이 달라 처음부터 갈라 받는다 */
+.inq-switch { display: flex; gap: 0; margin-top: 30px; border: 1px solid var(--line); width: fit-content; }
+.inq-tab {
+  background: transparent; border: 0; border-right: 1px solid var(--line);
+  color: var(--mute); font-family: var(--kr); font-size: 14px; font-weight: 600;
+  padding: 13px 26px; cursor: pointer; transition: background .18s, color .18s;
+}
+.inq-tab:last-child { border-right: 0; }
+.inq-tab:hover { color: var(--text); }
+.inq-tab.is-on { background: var(--text); color: var(--on-solid); }
+
+.contact { background: var(--surface); }
+#inq-form { margin-top: 40px; display: grid; gap: 26px; max-width: 620px; }
+#inq-form label { display: grid; gap: 8px; font-size: 13px; color: var(--mute); letter-spacing: .04em; }
+#inq-form input, #inq-form textarea {
+  background: transparent; border: 0; border-bottom: 1px solid var(--line);
+  color: var(--text); font-family: var(--kr); font-size: 16px; padding: 12px 2px; width: 100%;
+}
+#inq-form textarea { resize: vertical; }
+#inq-form input:focus, #inq-form textarea:focus { outline: none; border-bottom-color: var(--gold); }
+.field-hint { font-size: 12.5px; color: var(--mute); }
+.consent { grid-template-columns: auto 1fr; align-items: start; gap: 12px !important; font-size: 13.5px; line-height: 1.6; }
+.consent input { width: 18px; height: 18px; accent-color: var(--gold); }
+#inq-form button { justify-self: start; }
+.form-done { color: var(--gold); font-size: 14px; }
+.contact-alt { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 34px; }
+
+/* ---------- 신원 확인 ---------- */
+.verify { border: 1px solid var(--line); padding: clamp(28px, 4vw, 48px); margin-top: 44px; }
+.verify p + p { margin-top: 12px; }
+.verify-desc { color: var(--mute); font-size: 15px; max-width: 54ch; }
+.verify-no { font-family: var(--en); font-size: 15px; letter-spacing: .12em; color: var(--text); }
+.verify-link {
+  display: inline-flex; align-items: center; gap: 10px; margin-top: 22px;
+  border-bottom: 1px solid var(--gold); padding-bottom: 6px; font-weight: 600; font-size: 15px;
+}
+.verify-link::after { content: "→"; color: var(--gold); }
+
+/* ---------- 이달 조건·즉시 출고 ---------- */
+.offers { display: grid; gap: 2px; margin-top: 44px; }
+@media (min-width: 760px) { .offers { grid-template-columns: 1fr 1fr; } }
+.offer { background: var(--surface); padding: clamp(26px, 3.4vw, 40px); display: grid; gap: 10px; align-content: start; }
+.offer-kind { font-family: var(--en); font-size: 12px; letter-spacing: .14em; color: var(--gold); }
+.offer-sample { margin-left: 8px; padding: 2px 8px; border: 1px solid var(--line); color: var(--mute); letter-spacing: 0; font-family: var(--kr); }
+.offer h3 { font-size: clamp(18px, 2.2vw, 22px); letter-spacing: -.02em; }
+.offer p { color: var(--mute); font-size: 15px; }
+.offer-until { font-size: 13px !important; }
+.offer-ask { justify-self: start; margin-top: 8px; border-bottom: 1px solid var(--gold); padding-bottom: 5px; font-weight: 600; font-size: 14.5px; }
+.offer-ask::after { content: " →"; color: var(--gold); }
+
+/* ---------- 할부 계산기 (문의 폼과 같은 밑줄 입력칸) ---------- */
+.calc { margin-top: 40px; display: grid; gap: 22px; }
+@media (min-width: 760px) { .calc { grid-template-columns: 1fr 1fr; } .calc-out, .calc button { grid-column: 1 / -1; } }
+.calc label { display: grid; gap: 8px; font-size: 13px; color: var(--mute); letter-spacing: .04em; }
+.calc input, .calc select, #inq-form select {
+  background: transparent; border: 0; border-bottom: 1px solid var(--line);
+  color: var(--text); font-family: var(--kr); font-size: 16px; padding: 12px 2px; width: 100%;
+}
+.calc select option, #inq-form select option { background: var(--bg); color: var(--text); }
+.calc input:focus, .calc select:focus, #inq-form select:focus { outline: none; border-bottom-color: var(--gold); }
+.calc-out { font-size: 16px; color: var(--mute); padding: 18px 0; border-top: 1px solid var(--line-soft); }
+.calc-out strong { color: var(--text); font-size: clamp(24px, 3.4vw, 32px); font-family: var(--en); letter-spacing: .01em; }
+.calc button { justify-self: start; }
+.calc-sub { margin-top: clamp(56px, 8vw, 88px); font-size: clamp(22px, 3vw, 30px); letter-spacing: -.03em; }
+.calc-sub + .sec-desc { margin-top: 14px; }
+
+/* ---------- 출고 후기 ---------- */
+.deliveries { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-top: 44px; }
+@media (min-width: 760px) { .deliveries { grid-template-columns: repeat(3, 1fr); } }
+.delivery img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+.delivery figcaption { padding: 12px 2px 18px; font-size: 13.5px; color: var(--mute); display: grid; gap: 4px; }
+.delivery strong { color: var(--text); }
+
+/* ---------- 연락처 QR ---------- */
+.qr-box { display: flex; align-items: center; gap: 18px; margin-top: 34px; }
+.qr-box img { background: #fff; padding: 8px; width: 148px; height: 148px; }
+.qr-box figcaption { color: var(--mute); font-size: 13.5px; max-width: 28ch; }
+
+/* ---------- 푸터 ---------- */
+footer { padding: var(--pad) 0 132px; border-top: 1px solid var(--line-soft); }
+.foot-name { font-size: clamp(24px, 4vw, 40px); font-weight: 800; letter-spacing: -.035em; }
+.foot-meta { margin-top: 14px; color: var(--mute); font-size: 14px; }
+.legal { margin-top: 18px; color: var(--mute); font-size: 12.5px; line-height: 1.7; max-width: 78ch; opacity: .8; }
+@media (min-width: 760px) { footer { padding-bottom: var(--pad); } }
+
+/* ---------- 하단 고정 CTA (모바일) ---------- */
+.sticky-cta {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; gap: 2px;
+  padding: 0 0 env(safe-area-inset-bottom);
+  background: var(--bg); border-top: 1px solid var(--line-soft);
+}
+.sticky-cta .btn { flex: 1; justify-content: center; border: 0; padding: 19px 0; }
+.sticky-cta .btn-line { background: var(--surface); }
+@media (min-width: 760px) { .sticky-cta { display: none; } }
+
+/* ---------- 등장 모션 ---------- */
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  html { scroll-behavior: auto; }
+  .model img { transition: none; }
+}
+
+/* ---------- 모션 ---------- */
+/* 정지 사진 한 장짜리 화면도 살아 있게 보이도록. 전부 prefers-reduced-motion에서 꺼진다. */
+
+/* 상단 스크롤 진행 막대 — 페이지가 길어서 어디쯤인지 알려준다 */
+.progress {
+  position: fixed; top: 0; left: 0; z-index: 60;
+  height: 2px; width: 0; background: var(--gold);
+  transition: width .08s linear;
+}
+
+/* 히어로 서서히 확대 (켄 번스) */
+@keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.09); } }
+.hero-media img { animation: kenburns 26s ease-out forwards; transform-origin: 60% 40%; }
+
+/* 순차 등장 — 카드가 한꺼번에 튀어나오지 않고 물결처럼 들어온다 */
+.reveal { transition-delay: calc(var(--i, 0) * 70ms); }
+
+/* 숫자 카운트업 중 자릿수가 바뀌어도 폭이 흔들리지 않게 */
+.stat-value { font-variant-numeric: tabular-nums; }
+
+/* 버튼 화살표가 손끝을 따라간다 */
+.btn::after { transition: transform .18s ease; }
+.btn:hover::after { transform: translateX(5px); }
+
+/* 대표 차종 배경이 본문보다 느리게 흐른다 */
+.feature-media { will-change: transform; }
+
+/* 글 목록 화살표 */
+.post-row { position: relative; }
+.post-row::after {
+  content: "→"; position: absolute; right: 0; top: 50%; transform: translateY(-50%) translateX(-8px);
+  color: var(--gold); opacity: 0; transition: opacity .25s, transform .25s;
+}
+.post-row:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-media img { animation: none; }
+  .reveal { transition-delay: 0s !important; }
+  .progress { display: none; }
+  .btn::after, .post-row::after, .feature-media { transition: none; }
+}

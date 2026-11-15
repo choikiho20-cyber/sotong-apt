@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="{{theme}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="{{theme_color}}">
+{{robots_meta}}
+<title>{{region}} {{brand}} 영업사원 {{name}} — 신차 상담·견적·출고</title>
+<meta name="description" content="{{tagline}} 차값 외 실제 비용, 할부·리스 비교, 출고 시기까지 {{region}}에서 직접 상담해 드립니다.">
+{{naver_verification_meta}}
+<meta property="og:title" content="{{region}} {{brand}} 영업사원 {{name}}">
+<meta property="og:description" content="{{tagline}}">
+<meta property="og:url" content="{{site_url}}/">
+<meta property="og:type" content="website">
+{{og_meta}}
+<link rel="canonical" href="{{site_url}}/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500&display=swap"></noscript>
+<link rel="stylesheet" href="assets/style.css">
+<script type="application/ld+json">{{jsonld}}</script>
+<script type="application/ld+json">{{faq_jsonld}}</script>
+</head>
+<body data-track="{{track_url}}" data-site="{{site_id}}">
+
+<header class="hero">
+  <div class="hero-media">{{hero_media}}</div>
+  <div class="hero-inner wrap">
+    <p class="hero-claim">{{hero_claim}}</p>
+    <h1 class="hero-name">{{name}}</h1>
+    <p class="hero-role">{{tagline}}</p>
+    <p class="hero-sub">{{eyebrow}}</p>
+    <div class="hero-cta">
+      <a class="btn btn-solid" href="#contact">상담 문의</a>
+      <!-- 법인 담당자는 개인과 필요한 것이 달라 처음부터 갈라 보낸다.
+           누르면 문의 폼이 법인용(회사명·대수)으로 바뀐 채 열린다. -->
+      <a class="btn btn-line" href="#contact" data-fleet="1">법인·대량 문의</a>
+      <a class="btn btn-line" href="{{phone_link}}" data-ev="tel">전화하기</a>
+      {{youtube_btn}}
+    </div>
+  </div>
+  <p class="scroll-hint">SCROLL</p>
+</header>
+
+<main>
+
+<section class="stats">
+  <div class="wrap"><div class="stat-grid">{{stat_items}}</div></div>
+</section>
+
+<section class="sec" id="about">
+  <div class="wrap">
+    <p class="eyebrow">About</p>
+    <div class="about reveal" style="margin-top:34px">
+      <div>
+        <p class="about-lead">{{intro_lead}}</p>
+        <p class="about-body" style="margin-top:22px">{{intro}}</p>
+      </div>
+      <ul class="career">{{career_items}}</ul>
+    </div>
+    {{verify_box}}
+  </div>
+</section>
+
+{{feature_block}}
+
+<section class="sec" id="models">
+  <div class="wrap">
+    <p class="eyebrow">Lineup</p>
+    <h2 class="sec-title reveal">보고 계신 차를 누르시면 그 차로 문의가 열립니다</h2>
+    <p class="sec-desc reveal">제조사 사이트로 내보내지 않습니다. 견적을 재촉당하지 않고, 저에게 바로 물어보시면 됩니다. 아직 정하지 않으셨어도 괜찮습니다.</p>
+    <div class="finder-bar reveal">
+      <input id="model-search" type="search" autocomplete="off" placeholder="차종 이름 일부만 입력해도 됩니다 (예: 카니)">
+      <span class="eyebrow">{{model_count}}</span>
+    </div>
+    <p class="finder-empty" hidden>그 이름의 차종이 목록에 없습니다. 전화로 물어보시면 같이 찾아드립니다.</p>
+    {{model_groups}}
+  </div>
+</section>
+
+{{offers_block}}
+
+<section class="sec" id="calc">
+  <div class="wrap narrow">
+    <p class="eyebrow">Calculator</p>
+    <h2 class="sec-title reveal">할부로 하면 한 달에 얼마인가요?</h2>
+    <p class="sec-desc reveal">차량 가격에서 선수금을 뺀 금액을 기간과 금리로 나눈 원리금 균등 상환 금액입니다. 금리는 금융사 심사에 따라 달라지므로, 숫자를 넣어 대략을 보신 뒤 정확한 조건은 저에게 물어보십시오.</p>
+    <form id="calc-form" class="calc reveal">
+      <label>차종 <input name="model" list="model-list" placeholder="선택하지 않아도 됩니다"></label>
+      <datalist id="model-list">{{model_options}}</datalist>
+      <label>차량 가격 (만 원) <input name="price" inputmode="numeric" placeholder="예) 4200"></label>
+      <label>선수금 (만 원) <input name="down" inputmode="numeric" placeholder="없으면 0"></label>
+      <label>기간
+        <select name="months"><option>12</option><option>24</option><option selected>36</option><option>48</option><option>60</option></select>
+      </label>
+      <label>연 금리 (%) <input name="rate" inputmode="decimal" placeholder="예) 4.9"></label>
+      <p class="calc-out" aria-live="polite">차량 가격과 금리를 넣으면 월 납입금이 계산됩니다.</p>
+      <button class="btn btn-line" type="submit" data-ev="calc">이 조건으로 상담하기</button>
+    </form>
+    <p class="legal">계산 결과는 참고용이며 실제 금리·한도·월 납입금은 금융사 심사 결과에 따라 달라집니다.</p>
+    {{finance_notice}}
+
+    <h3 class="calc-sub reveal">1년 자동차세는 얼마인가요?</h3>
+    <p class="sec-desc reveal">개인 승용차는 배기량 1cc마다 1,000cc 이하 80원, 1,600cc 이하 140원, 1,600cc 초과 200원이고, 여기에 지방교육세 30%가 붙습니다. 전기·수소차는 배기량과 관계없이 10만 원에 교육세 3만 원입니다.</p>
+    <form id="tax-form" class="calc reveal">
+      <label>연료
+        <select name="fuel"><option value="ice">가솔린·디젤·LPG·하이브리드</option><option value="ev">전기·수소</option></select>
+      </label>
+      <label>배기량 (cc) <input name="cc" inputmode="numeric" placeholder="예) 2497"></label>
+      <p class="calc-out" aria-live="polite">배기량을 넣으면 1년 자동차세가 계산됩니다.</p>
+    </form>
+    <p class="legal">비영업용 승용차 기준(지방세법 제127조)입니다. 3년차부터 차령에 따라 줄어들고, 승합·화물·영업용은 세율이 다릅니다.</p>
+  </div>
+</section>
+
+<section class="sec" id="help">
+  <div class="wrap">
+    <p class="eyebrow">Support</p>
+    <h2 class="sec-title reveal">차종부터 묻지 않습니다. 지금 놓인 상황부터 듣습니다</h2>
+    <div class="cards">{{situation_cards}}</div>
+  </div>
+</section>
+
+<section class="sec" id="principles">
+  <div class="wrap">
+    <p class="eyebrow">Principles</p>
+    <h2 class="sec-title reveal">상담 전에 이것부터 약속드립니다</h2>
+    <div class="principles">{{principle_items}}</div>
+  </div>
+</section>
+
+<section class="sec" id="process">
+  <div class="wrap">
+    <p class="eyebrow">Process</p>
+    <h2 class="sec-title reveal">연락부터 출고까지 네 단계로 진행합니다</h2>
+    <div class="steps">{{process_steps}}</div>
+  </div>
+</section>
+
+{{deliveries_block}}
+
+<section class="sec" id="posts">
+  <div class="wrap">
+    <p class="eyebrow">Insights</p>
+    <h2 class="sec-title reveal">상담에서 가장 자주 받는 질문들을 글로 정리했습니다</h2>
+    <div class="post-list">{{posts_list}}</div>
+  </div>
+</section>
+
+<section class="sec" id="faq">
+  <div class="wrap narrow">
+    <p class="eyebrow">FAQ</p>
+    <h2 class="sec-title reveal">상담 전에 이것이 궁금하실 겁니다</h2>
+    <div class="faq-list">{{faq_items}}</div>
+  </div>
+</section>
+
+</main>
+
+<section class="sec contact" id="contact">
+  <div class="wrap">
+    <p class="eyebrow">Contact</p>
+    <h2 class="sec-title" id="inq-title">물어보는 데는 비용이 들지 않습니다</h2>
+    <p class="sec-desc" id="inq-desc">이름과 연락처만 남겨주시면 제가 직접, 하루 안에 연락드립니다. 전화가 편하시면 바로 걸어주세요.</p>
+    <div class="inq-switch">
+      <button type="button" class="inq-tab is-on" data-mode="personal">개인</button>
+      <button type="button" class="inq-tab" data-mode="fleet">법인·대량</button>
+      <button type="button" class="inq-tab" data-mode="visit">시승·방문</button>
+    </div>
+    <form id="inq-form">
+      <input type="hidden" name="inquiry_type" id="inq-type" value="개인">
+      <label>성함 <input name="name" required autocomplete="name"></label>
+      <label>연락처 <input name="phone" type="tel" required autocomplete="tel"></label>
+      <!-- 법인일 때만 나오는 칸. 대수와 시기를 처음부터 받으면 왕복이 한 번 줄어든다. -->
+      <label class="fleet-only" hidden>회사·상호 <input name="company" autocomplete="organization" placeholder="예) OO물류, OO택배 제천대리점"></label>
+      <label class="fleet-only" hidden>필요 대수 <input name="qty" inputmode="numeric" placeholder="예) 봉고 5대 + 스타리아 2대"></label>
+      <label class="fleet-only" hidden>언제까지 필요하신가요 <input name="deadline" placeholder="예) 12월 중 가동 예정 / 아직 미정"></label>
+      <!-- 시승·방문일 때만. 확정 전까지는 예약이 아니라 '희망'으로 받는다 (시승차 일정은 전시장 사정) -->
+      <label class="visit-only" hidden>희망 날짜 <input name="visit_date" type="date" id="visit-date"></label>
+      <label class="visit-only" hidden>시간대
+        <select name="visit_time"><option>오전</option><option>오후</option><option>저녁</option><option>아무 때나</option></select>
+      </label>
+      <label>관심 차종 <input name="model" id="inq-model" list="model-list" placeholder="아직 못 정하셨으면 비워두셔도 됩니다"></label>
+      <label>궁금한 내용
+        <textarea name="message" rows="3" placeholder="예) 출고까지 얼마나 걸리는지 궁금합니다"></textarea>
+        <small class="field-hint">타이핑이 번거로우시면 키보드의 마이크 버튼을 눌러 말로 입력하셔도 됩니다.</small>
+      </label>
+      <label class="consent">
+        <input type="checkbox" name="consent" required>
+        <span>상담 답변을 위해 성함과 연락처를 수집하는 데 동의합니다. 답변이 끝나면 파기합니다.</span>
+      </label>
+      <button class="btn btn-solid" type="submit">문의 남기기</button>
+      <p class="form-done" hidden>문의가 접수되었습니다. 하루 안에 연락드리겠습니다.</p>
+    </form>
+    <div class="contact-alt">
+      <a class="btn btn-line" href="{{phone_link}}" data-ev="tel">{{phone}}</a>
+      {{kakao_btn_contact}}
+      <a class="btn btn-line" href="contact.vcf" download="{{name}}.vcf" data-ev="vcard">연락처 저장</a>
+    </div>
+    <figure class="qr-box">
+      <img src="qr.svg" width="148" height="148" alt="{{name}} 상담 페이지 QR 코드" loading="lazy">
+      <figcaption>폰 카메라로 비추면 이 페이지가 열립니다. 옆 사람에게 보여주셔도 됩니다.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="foot-name">{{name}}</p>
+    <p class="foot-meta">{{brand}} 영업사원 · {{region}} · {{phone}}</p>
+    <p class="legal">활동 지역: {{region_official}}</p>
+    <p class="legal">본 페이지는 {{dealership}} 소속 영업사원 {{name}}의 개인 상담 안내 페이지이며, {{brand}} 또는 대리점의 공식 홈페이지가 아닙니다.</p>
+    <p class="legal">본 페이지의 글은 자동차 구입 절차와 제도에 대한 일반적인 정보 제공을 목적으로 합니다.
+    차량 가격, 프로모션, 할부·리스 조건, 보조금, 출고 시기는 시점과 심사 결과에 따라 달라지므로 계약 전 반드시 확인하시기 바랍니다.</p>
+    {{footer_channels}}
+    {{privacy_note}}
+    <p class="legal">최종 수정 {{updated}} · © {{year}} {{name}} · <a href="admin.html" rel="nofollow">관리</a></p>
+  </div>
+</footer>
+
+<nav class="sticky-cta" aria-label="빠른 연락">
+  <a class="btn btn-solid" href="{{phone_link}}" data-ev="tel">전화 상담</a>
+  {{kakao_btn_sticky}}
+</nav>
+
+<div class="progress" id="progress" aria-hidden="true"></div>
+<script src="assets/track.js" defer></script>
+<script>
+const slow = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// 대표 차종 '영상으로 보기': 누를 때만 유튜브 iframe 을 끼운다 (nocookie 주소)
+document.querySelector('.feature-play')?.addEventListener('click', function () {
+  const box = document.createElement('div');
+  box.className = 'feature-player';
+  box.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + this.dataset.yt +
+    '?rel=0&playsinline=1" title="영상" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+  this.closest('.feature-inner').insertBefore(box, this.closest('.hero-cta'));
+  this.remove();
+  box.scrollIntoView({ behavior: slow ? 'auto' : 'smooth', block: 'center' });
+});
+
+// 같은 줄에 있는 것들이 한꺼번에 튀어나오지 않게 순번을 매긴다
+document.querySelectorAll('.stat-grid, .cards, .steps, .model-grid, .post-list, .principles')
+  .forEach(row => [...row.children].forEach((el, i) => el.style.setProperty('--i', i % 6)));
+
+const seen = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) { e.target.classList.add('in'); seen.unobserve(e.target); }
+}), { threshold: 0.08, rootMargin: '0px 0px -8% 0px' });
+document.querySelectorAll('.reveal').forEach(el => seen.observe(el));
+
+// 카드 금빛: 커서·손가락 위치만 CSS로 넘긴다. 빛은 CSS가 그린다.
+document.querySelectorAll('.card').forEach(c => ['pointermove', 'pointerdown'].forEach(ev =>
+  c.addEventListener(ev, e => {
+    const r = c.getBoundingClientRect();
+    c.style.setProperty('--x', e.clientX - r.left + 'px');
+    c.style.setProperty('--y', e.clientY - r.top + 'px');
+  })));
+
+// 실적 숫자가 0에서 올라간다. 페이지에서 가장 먼저 읽혀야 할 정보에 시선을 붙잡아 둔다.
+(function () {
+  const nodes = document.querySelectorAll('.stat-value');
+  if (!nodes.length) return;
+  const run = el => {
+    const node = el.firstChild;              // .unit 앞의 숫자 텍스트만
+    const raw = (node.textContent || '').trim();
+    const target = parseFloat(raw.replace(/,/g, ''));
+    if (!isFinite(target)) return;
+    if (slow) return;
+    const comma = raw.includes(',');
+    const t0 = performance.now(), dur = 1200;
+    (function step(t) {
+      const p = Math.min((t - t0) / dur, 1);
+      const v = Math.round(target * (1 - Math.pow(1 - p, 3)));
+      node.textContent = comma ? v.toLocaleString('ko-KR') : String(v);
+      if (p < 1) requestAnimationFrame(step);
+    })(t0);
+  };
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { run(e.target); io.unobserve(e.target); }
+  }), { threshold: 0.6 });
+  nodes.forEach(n => io.observe(n));
+})();
+
+// 안드로이드 브라우저는 PDF를 화면에 못 그리고 내려받기부터 시킨다. 구글 문서 뷰어를 거치면
+// 바로 페이지로 보인다. 아이폰·데스크톱은 내장 뷰어가 더 좋으므로 안드로이드에서만 주소를 바꾼다.
+(function () {
+  if (!/Android/i.test(navigator.userAgent)) return;
+  document.querySelectorAll('.model-cat').forEach(a => {
+    a.href = 'https://docs.google.com/gview?embedded=true&url=' + encodeURIComponent(a.href);
+  });
+})();
+
+// 개인 / 법인·대량 문의 전환.
+// 법인 담당자는 회사명·대수·시기를 처음부터 알려줘야 견적이 나온다. 그 칸을 평소엔
+// 감춰 두었다가 법인일 때만 펼친다. JS가 죽어도 개인 문의는 그대로 되고, 감춰진
+// 칸은 required가 없어 제출을 막지 않는다.
+(function () {
+  const form = document.getElementById('inq-form');
+  if (!form) return;
+  const tabs = document.querySelectorAll('.inq-tab');
+  const only = document.querySelectorAll('.fleet-only');
+  const visitOnly = document.querySelectorAll('.visit-only');
+  const day = document.getElementById('visit-date');
+  if (day) day.min = new Date(Date.now() + 864e5).toISOString().slice(0, 10); // 내일부터
+  const type = document.getElementById('inq-type');
+  const title = document.getElementById('inq-title');
+  const desc = document.getElementById('inq-desc');
+  const TEXT = {
+    personal: ['물어보는 데는 비용이 들지 않습니다',
+      '이름과 연락처만 남겨주시면 제가 직접, 하루 안에 연락드립니다. 전화가 편하시면 바로 걸어주세요.'],
+    fleet: ['대수와 시기만 알려주시면 견적을 만들어 드립니다',
+      '예산 승인 전이어도 괜찮습니다. 품의 올리실 수 있는 형태로 총액과 출고 예상표를 정리해 보내드립니다.'],
+    visit: ['원하시는 날 차를 준비해 두겠습니다',
+      '날짜와 시간대를 고르시면 시승차·전시차 일정을 확인해 확정 연락을 드립니다. 연락드리기 전까지는 예약이 확정된 것이 아닙니다.'],
+  };
+  const TYPE = { personal: '개인', fleet: '법인·대량', visit: '시승·방문' };
+
+  function set(mode) {
+    tabs.forEach(t => t.classList.toggle('is-on', t.dataset.mode === mode));
+    only.forEach(el => { el.hidden = mode !== 'fleet'; });
+    visitOnly.forEach(el => { el.hidden = mode !== 'visit'; });
+    if (type) type.value = TYPE[mode];
+    if (title) title.textContent = TEXT[mode][0];
+    if (desc) desc.textContent = TEXT[mode][1];
+  }
+
+  tabs.forEach(t => t.addEventListener('click', () => set(t.dataset.mode)));
+  // 히어로의 '법인·대량 문의' 버튼 — 폼으로 내려가면서 법인 모드로 바꿔 둔다
+  document.querySelectorAll('[data-fleet]').forEach(a =>
+    a.addEventListener('click', () => set('fleet')));
+})();
+
+// 차종 카드가 마우스를 따라 기운다. 커서 위치를 카드 중심 기준 -1~1로 잰 뒤 각도로 바꾼다.
+// 터치 기기(hover 없음)와 모션 최소화 설정에서는 아예 안 붙인다.
+(function () {
+  if (slow || !matchMedia('(hover: hover)').matches) return;
+  const MAX = 7; // 도(deg). 더 크면 장난감처럼 보인다
+  document.querySelectorAll('.model').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;   // -0.5 ~ 0.5
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      card.style.setProperty('--ry', (px * MAX * 2).toFixed(2) + 'deg');
+      card.style.setProperty('--rx', (-py * MAX * 2).toFixed(2) + 'deg');
+      card.classList.add('tilt');
+    });
+    card.addEventListener('mouseleave', () => card.classList.remove('tilt'));
+  });
+})();
+
+// 스크롤 진행 막대 + 대표 차종 배경 패럴랙스. 스크롤마다 계산하지 않고 프레임당 한 번만 그린다.
+(function () {
+  const bar = document.getElementById('progress');
+  const media = document.querySelector('.feature-media');
+  if (slow) { if (bar) bar.remove(); return; }
+  let queued = false;
+  function draw() {
+    queued = false;
+    const max = document.body.scrollHeight - innerHeight;
+    if (bar) bar.style.width = (max > 0 ? (scrollY / max) * 100 : 0) + '%';
+    if (media) {
+      const box = media.parentElement.getBoundingClientRect();
+      if (box.bottom > 0 && box.top < innerHeight) {
+        const t = (box.top + box.height / 2 - innerHeight / 2) / innerHeight;
+        media.style.transform = 'translate3d(0,' + (t * -48).toFixed(1) + 'px,0) scale(1.12)';
+      }
+    }
+  }
+  addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(draw); } }, { passive: true });
+  addEventListener('resize', draw, { passive: true });
+  draw();
+})();
+
+// 차종 찾기 — 목록을 훑지 않고 두어 글자로 걸러낸다. JS가 죽어도 목록과 링크는 그대로 동작한다.
+(function () {
+  const box = document.getElementById('model-search');
+  if (!box) return;
+  const items = Array.from(document.querySelectorAll('.model'));
+  const groups = Array.from(document.querySelectorAll('[data-group]'));
+  const empty = document.querySelector('.finder-empty');
+  box.addEventListener('input', function () {
+    const q = box.value.trim().toLowerCase();
+    // 카드 안에 설명 문장이 들어간 뒤로는 textContent로 거르면 엉뚱한 차가 걸린다. 차종명만 본다.
+    items.forEach(a => { a.hidden = q && !(a.dataset.model || '').toLowerCase().includes(q); });
+    groups.forEach(g => { g.hidden = !g.querySelector('.model:not([hidden])'); });
+    empty.hidden = !q || items.some(a => !a.hidden);
+  });
+
+})();
+
+// 차종을 누르면 문의 폼의 '관심 차종'이 채워진 채로 열린다.
+// 차종 카드뿐 아니라 대표 차종 섹션의 버튼까지 잡아야 하므로 [data-model] 전체를 건다.
+// JS가 없어도 href="#contact"라 폼까지는 간다 — 채워주는 것만 거들 뿐.
+(function () {
+  const field = document.getElementById('inq-model');
+  if (!field) return;
+  document.querySelectorAll('[data-model]').forEach(a => a.addEventListener('click', function () {
+    field.value = a.dataset.model;
+  }));
+})();
+
+// 할부 계산기 — 원리금 균등 상환. 숫자만 넣으면 바로 계산되고, '이 조건으로 상담'은 그 숫자를 문의 폼에 옮겨 적는다.
+(function () {
+  const f = document.getElementById('calc-form');
+  if (!f) return;
+  const out = f.querySelector('.calc-out');
+  const won = n => Math.round(n).toLocaleString('ko-KR') + '원';
+  const num = el => parseFloat(String(el.value).replace(/[^\d.]/g, ''));
+  let summary = '';
+  function calc() {
+    const price = num(f.price) * 1e4, down = (num(f.down) || 0) * 1e4;
+    const n = +f.months.value, rate = num(f.rate), p = price - down;
+    if (!(p > 0) || !isFinite(rate)) {
+      out.textContent = '차량 가격과 금리를 넣으면 월 납입금이 계산됩니다.';
+      summary = ''; return;
+    }
+    const r = rate / 100 / 12;
+    const m = r ? p * r / (1 - Math.pow(1 + r, -n)) : p / n;
+    out.innerHTML = '월 약 <strong>' + won(m) + '</strong> · ' + n + '개월 이자 합계 약 ' + won(m * n - p);
+    summary = '[할부 계산] 차량가 ' + num(f.price) + '만 원, 선수금 ' + (num(f.down) || 0) + '만 원, ' +
+      n + '개월, 연 ' + rate + '% → 월 약 ' + won(m);
+  }
+  f.addEventListener('input', calc);
+  f.addEventListener('submit', e => {
+    e.preventDefault();
+    const msg = document.querySelector('#inq-form textarea[name="message"]');
+    const model = document.getElementById('inq-model');
+    if (msg && summary) msg.value = summary + (msg.value ? '\n' + msg.value : '');
+    if (model && f.model.value) model.value = f.model.value;
+    document.getElementById('contact').scrollIntoView({ behavior: slow ? 'auto' : 'smooth' });
+  });
+})();
+
+// 자동차세 — 지방세법 제127조 비영업용 승용. 세율 구간이 법에 정해져 있어 계산이 정확히 나온다.
+(function () {
+  const f = document.getElementById('tax-form');
+  if (!f) return;
+  const out = f.querySelector('.calc-out');
+  const won = n => Math.round(n).toLocaleString('ko-KR') + '원';
+  function calc() {
+    const ev = f.fuel.value === 'ev';
+    f.cc.closest('label').hidden = ev;
+    const cc = parseFloat(String(f.cc.value).replace(/[^\d.]/g, ''));
+    let tax;
+    if (ev) tax = 100000;
+    else if (cc > 0) tax = cc * (cc <= 1000 ? 80 : cc <= 1600 ? 140 : 200);
+    else { out.textContent = '배기량을 넣으면 1년 자동차세가 계산됩니다.'; return; }
+    out.innerHTML = '1년 약 <strong>' + won(tax * 1.3) + '</strong> · 자동차세 ' + won(tax) + ' + 지방교육세 ' + won(tax * 0.3);
+  }
+  f.addEventListener('input', calc);
+  f.addEventListener('submit', e => e.preventDefault());
+})();
+
+// 이달 조건은 기한이 지나면 다시 빌드하지 않아도 화면에서 내려간다.
+(function () {
+  const today = new Date().toISOString().slice(0, 10);
+  document.querySelectorAll('.offer[data-until]').forEach(o => { if (o.dataset.until < today) o.remove(); });
+  const box = document.getElementById('offers');
+  if (box && !box.querySelector('.offer')) box.remove();
+})();
+</script>
+</body>
+</html>

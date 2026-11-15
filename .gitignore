@@ -1,0 +1,8 @@
+# 공개 엔진 저장소에는 engine/ 만 올린다.
+# 세대(고객 데이터)·견본 공장(영업 명단·가격·플레이스 수집기)·내부 문서는 이 PC에만.
+units/
+factory/
+README.md
+명단.csv
+__pycache__/
+.wrangler/

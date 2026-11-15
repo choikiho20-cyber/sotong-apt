@@ -1,0 +1,78 @@
+{
+  "brand": "KGM",
+  "note": "차종명은 2026-09-10 KGM 공식 사이트(kg-mobility.com/pr/model)에서 확인한 값입니다. 라인업은 수시로 바뀌므로 새 고객을 받을 때 다시 확인하십시오.",
+  "photo_note": "assets/models/<차종명>.jpg 가 있으면 그 사진이 쓰이고, 없으면 생성 배경 아트가 쓰입니다. 제조사 공식 이미지 대신 영업사원이 전시장에서 직접 찍은 세로 사진(3:5)을 쓰십시오.",
+  "catalog_note": "KGM은 카탈로그 버튼이 <button>이라 차종별 PDF 주소가 페이지에 없습니다(클릭 시 서버가 만들어 내려줌). 그래서 차종별 직링크 대신 KGM 공식 '카탈로그·가격표' 목록 페이지로 연결합니다. 손님이 그 페이지에서 해당 차종을 고르면 됩니다. 2026-09-10 200 확인. 대리점에서 차종별 PDF 주소를 받으면 각 catalog 값을 그것으로 교체하십시오.",
+  "copy_note": "설명은 제원·연비 같은 숫자를 넣지 않고 '누구에게 맞는 차인가'만 씁니다. 영업사원 본인이 자기 말투로 고치는 것을 전제로 한 초안입니다.",
+  "featured": {
+    "name": "토레스",
+    "copy": "같은 값이면 큰 차를 원하시는 분들이 결국 여기로 오십니다.",
+    "note": "하이브리드와 전기(EVX) 중 무엇이 맞는지는 하루 주행거리와 충전 여건으로 갈립니다. 그것부터 여쭤보고 좁혀 드립니다.",
+    "video": "https://youtu.be/I2hZVznlWQs",
+    "video_label": "뉴 토레스, 뭐가 달라졌는지 5분 영상",
+    "video_note": "유튜브 임베드 주소. 영상 자체를 내려받거나 화면을 캡처해 쓰면 저작권 문제 — 주소만 바꿔 끼우십시오. 비우면 버튼이 사라집니다."
+  },
+  "groups": [
+    {
+      "name": "SUV",
+      "models": [
+        {
+          "name": "티볼리",
+          "copy": "가장 작은 SUV입니다. 첫 차나 세컨드카로 많이 나갑니다.",
+          "catalog": "https://www.kg-mobility.com/od/promotion/catalog-download"
+        },
+        {
+          "name": "액티언",
+          "copy": "디자인을 먼저 보시는 분들이 찾습니다. 하이브리드와 가솔린 중 주행 거리로 갈립니다.",
+          "catalog": "https://www.kg-mobility.com/od/promotion/catalog-download"
+        },
+        {
+          "name": "액티언 하이브리드",
+          "copy": "출퇴근 거리가 길어 연비가 걸리신다면 여기부터 봅니다.",
+          "catalog": "https://www.kg-mobility.com/od/promotion/catalog-download"
+        },
+        {
+          "name": "토레스",
+          "copy": "같은 값이면 큰 차를 원하시는 분들이 결국 여기로 오십니다.",
+          "catalog": "https://www.kg-mobility.com/od/promotion/catalog-download"
+        },
+        {
+          "name": "토레스 하이브리드",
+          "copy": "토레스 크기는 그대로 두고 유지비를 낮추고 싶으실 때입니다.",
+          "catalog": "https://www.kg-mobility.com/od/promotion/catalog-download"
+        },
+        {
+          "name": "토레스 EVX",
+          "copy": "전기차인데 큰 차가 필요하신 경우입니다. 충전 환경이 안 되면 권해드리지 않습니다.",
+          "catalog": "https://www.kg-mobility.com/od/promotion/catalog-download"
+        },
+        {
+          "name": "렉스턴 뉴 아레나",
+          "copy": "프레임 바디라 견인이나 험로가 걸리는 일에 맞습니다.",
+          "catalog": "https://www.kg-mobility.com/od/promotion/catalog-download"
+        },
+        {
+          "name": "렉스턴 써밋",
+          "copy": "가장 윗급입니다. 뒷좌석 중심으로 쓰실 계획인지에 따라 트림이 갈립니다.",
+          "catalog": "https://www.kg-mobility.com/od/promotion/catalog-download"
+        }
+      ]
+    },
+    {
+      "name": "픽업·밴",
+      "models": [
+        {
+          "name": "무쏘",
+          "copy": "짐칸이 따로 필요한 일을 하신다면 승합·화물과 함께 비교해야 합니다. 용도에 따라 세금과 보험이 달라집니다.",
+          "catalog": "https://www.kg-mobility.com/od/promotion/catalog-download"
+        },
+        {
+          "name": "무쏘 EV",
+          "copy": "일에 쓰는 전기 픽업입니다. 하루 주행거리와 충전 여건, 보조금을 같이 계산해야 답이 나옵니다.",
+          "catalog": "https://www.kg-mobility.com/od/promotion/catalog-download"
+        }
+      ]
+    }
+  ],
+  "catalog_label": "카탈로그 목록"
+}
