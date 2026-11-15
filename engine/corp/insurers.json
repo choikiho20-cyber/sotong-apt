@@ -1,0 +1,23 @@
+{
+  "_note": "법인판은 보험사가 아니라 대표용 공공 사이트 목록. life=세무·등기·행정, general=기업지원·정책 (개인판 build.py와 키 이름을 맞춘 것). mark = 아이콘 칸에 들어갈 두세 글자",
+  "life": [
+    { "name": "홈택스", "mark": "홈택스", "url": "https://www.hometax.go.kr" },
+    { "name": "국세청", "mark": "국세청", "url": "https://www.nts.go.kr" },
+    { "name": "위택스 (지방세)", "mark": "위택스", "url": "https://www.wetax.go.kr" },
+    { "name": "인터넷등기소", "mark": "등기", "url": "https://www.iros.go.kr" },
+    { "name": "4대사회보험 정보연계", "mark": "4대", "url": "https://www.4insure.or.kr" },
+    { "name": "국민연금공단", "mark": "연금", "url": "https://www.nps.or.kr" },
+    { "name": "근로복지공단", "mark": "근로", "url": "https://www.comwel.or.kr" },
+    { "name": "정부24", "mark": "24", "url": "https://www.gov.kr" },
+    { "name": "국가법령정보센터", "mark": "법령", "url": "https://www.law.go.kr" }
+  ],
+  "general": [
+    { "name": "중소기업현황정보", "mark": "현황", "url": "https://sminfo.mss.go.kr" },
+    { "name": "중소기업중앙회", "mark": "중앙", "url": "https://www.kbiz.or.kr" },
+    { "name": "소상공인시장진흥공단", "mark": "소진", "url": "https://www.semas.or.kr" },
+    { "name": "K-스타트업", "mark": "K", "url": "https://www.k-startup.go.kr" },
+    { "name": "신용보증기금", "mark": "신보", "url": "https://www.kodit.co.kr" },
+    { "name": "한국기업데이터", "mark": "KED", "url": "https://www.kcredit.or.kr" },
+    { "name": "공정거래위원회", "mark": "공정", "url": "https://www.ftc.go.kr" }
+  ]
+}

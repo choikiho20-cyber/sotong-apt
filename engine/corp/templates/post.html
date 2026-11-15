@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{{robots_meta}}
+<title>{{title}} — {{identity}}</title>
+<meta name="description" content="{{description}}">
+<meta property="og:title" content="{{title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:url" content="{{site_url}}/posts/{{slug}}">
+<meta property="og:type" content="article">
+<meta property="og:image" content="{{og_image}}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="{{site_url}}/posts/{{slug}}">
+<script type="application/ld+json">{{article_jsonld}}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+.article { max-width: 680px; margin: 0 auto; padding: 48px 24px 80px; }
+.article-head { border-bottom: 1px solid var(--line); padding-bottom: 28px; margin-bottom: 32px; }
+.article h1 { font-family: var(--serif); font-weight: 700; font-size: clamp(26px, 6vw, 34px); line-height: 1.4; margin: 10px 0; }
+.article .meta { color: var(--stone); font-size: 14px; }
+.article h2 { font-family: var(--serif); font-size: 21px; margin: 36px 0 12px; }
+.article h3 { font-size: 17px; margin: 28px 0 10px; }
+.article p { margin: 14px 0; }
+.article ul { margin: 14px 0 14px 22px; }
+.article li { margin: 6px 0; }
+.article blockquote { border-left: 3px solid var(--pine); background: var(--tint); padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 18px 0; font-size: 15px; color: var(--stone); }
+.article hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
+.article a:not(.btn) { color: var(--pine); font-weight: 600; } /* 본문 링크용 — .btn을 빼지 않으면 초록 버튼에 초록 글씨가 됨 */
+.author { display: flex; gap: 14px; align-items: center; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 18px 0; margin-top: 40px; }
+.author img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; object-position: top; flex: none; }
+.author b { display: block; font-size: 16px; }
+.author span { display: block; font-size: 13px; color: var(--stone); line-height: 1.6; }
+.related { margin-top: 36px; }
+.related h2 { font-size: 18px !important; margin: 0 0 10px !important; }
+.related ul { list-style: none; margin: 0 !important; }
+.related li { border-bottom: 1px solid var(--line); margin: 0 !important; }
+.related a { display: block; padding: 12px 0; text-decoration: none; color: var(--ink) !important; font-weight: 600; }
+.back { display: inline-block; text-decoration: none; font-weight: 700; font-size: 14px; color: var(--pine); }
+.article-cta { background: var(--tint); border-radius: 10px; padding: 26px 22px; margin-top: 44px; }
+.article-cta p { margin: 0 0 14px; font-family: var(--serif); font-weight: 600; }
+/* 글자 수가 달라도 두 버튼 폭을 같게 — 라벨 길이에 디자인이 흔들리지 않도록 */
+.article-cta-btns { display: flex; gap: 10px; flex-wrap: wrap; max-width: 520px; }
+.article-cta-btns .btn { flex: 1 1 190px; }
+</style>
+</head>
+<body data-track="{{track_url}}">
+<article class="article">
+  <div class="article-head">
+    <a class="back" href="../">&larr; {{name}} 홈으로</a>
+    <h1>{{title}}</h1>
+    <p class="meta">{{date}} · {{region}} · {{identity}}</p>
+  </div>
+  {{content}}
+  <div class="author">
+    <img src="../{{hero_image}}" alt="{{name}}">
+    <div><b>이 글을 쓴 사람 · {{identity}}</b>
+      <span>{{author_note}}</span></div>
+  </div>
+  <div class="article-cta">
+    <p>우리 회사는 어떤지 궁금하시면 회사 이름만 알려 주십시오. 숫자로 분석해 가져가겠습니다.</p>
+    <div class="article-cta-btns">
+      <a class="btn btn-solid" href="{{phone_link}}" data-ev="tel">전화로 물어보기</a>
+      {{kakao_btn_article}}
+    </div>
+  </div>
+  <nav class="related"><h2>함께 읽으면 좋은 글</h2><ul>{{related}}</ul></nav>
+</article>
+<footer>
+  <p class="foot-name">{{identity}}</p>
+  <p>{{region}} · {{phone}}</p>
+  <p class="legal">본 글은 관련 법령을 소개하는 일반적 정보이며, 개별 사안에 대한 세무·법률 자문이 아닙니다. 개별 사안의 세무·법률 판단과 신고·등기는 세무사·변호사·법무사 등 해당 자격 전문가가 수행합니다.</p>
+  {{disclosure}}
+</footer>
+<script src="../assets/track.js" defer></script>
+</body>
+</html>

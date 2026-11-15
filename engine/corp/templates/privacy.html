@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>개인정보처리방침 — {{identity}}</title>
+<meta name="description" content="{{identity}} 홈페이지가 문의를 받을 때 어떤 개인정보를 왜 받고, 얼마나 보관하고, 어떻게 지우는지 적은 안내입니다.">
+<link rel="canonical" href="{{site_url}}/privacy">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "개인정보처리방침", "url": "{{site_url}}/privacy", "inLanguage": "ko", "isPartOf": {"@type": "WebSite", "url": "{{site_url}}/"}}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.policy { max-width: 680px; margin: 0 auto; padding: 48px 24px 60px; }
+.policy h1 { font-size: 26px; margin: 12px 0 20px; }
+.policy h2 { font-size: 17px; margin: 28px 0 8px; }
+.policy p, .policy li { font-size: 15px; line-height: 1.75; }
+.policy ul { margin: 6px 0 0 20px; }
+.back { font-weight: 700; font-size: 14px; text-decoration: none; }
+</style>
+</head>
+<body>
+<main class="policy">
+  <a class="back" href="./">&larr; {{name}} 홈으로</a>
+  <h1>개인정보처리방침</h1>
+  <p>{{identity}}(이하 "운영자")는 이 홈페이지의 상담 문의로 받은 개인정보를 아래와 같이 처리합니다.</p>
+
+  <h2>1. 수집하는 항목과 목적</h2>
+  <ul>
+    <li>항목: 성함, 연락처, 문의 내용</li>
+    <li>목적: 문의하신 내용에 대한 상담 답변 연락</li>
+  </ul>
+
+  <h2>2. 보유 기간과 파기</h2>
+  <p>상담 답변이 끝나면 지체 없이 파기합니다. 다만 관계 법령에서 보관을 정한 경우에는 그 기간 동안 보관합니다.</p>
+
+  <h2>3. 제3자 제공</h2>
+  <p>수집한 개인정보를 제3자에게 제공하지 않습니다. 영업 권유 목적의 명단으로 쓰거나 판매하지 않습니다.</p>
+
+  <h2>4. 처리 위탁</h2>
+  <p>{{processor}}</p>
+
+  <h2>5. 정보주체의 권리</h2>
+  <p>언제든지 본인의 개인정보 열람, 정정, 삭제, 처리 정지를 요청하실 수 있습니다. 아래 연락처로 말씀해 주시면 지체 없이 처리합니다.</p>
+
+  <h2>6. 개인정보 보호 책임자</h2>
+  <p>{{identity}} · {{phone}}</p>
+</main>
+<footer>
+  <p class="foot-name">{{identity}}</p>
+  <p>{{region}} · {{phone}}</p>
+  {{disclosure}}
+</footer>
+</body>
+</html>
