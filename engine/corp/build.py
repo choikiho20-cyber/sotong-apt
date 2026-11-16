@@ -496,15 +496,15 @@ export default {
 # 도구 코드 보호 1단계(2026-11-08 대표님 "복제품 금방 나오면 재미없다"): dist 에 들어가는 도구 JS 를 esbuild 로 압축·변수명 뒤섞기.
 # 원본 법인도구/web 은 그대로. 압축본 맨 앞 한 줄이 저작권 배너(= 워터마크, 화면엔 안 보임, 소스를 열어야 보임) + 빌드 서명(원본 해시 12자).
 # 2단계(서버로 산식 이전)는 유료 고객 뒤 — 올인원_도구_구상·계획.md 참고.
-TOOLS_BANNER = "/*! (c) 2026 소통마케팅센터 · 글해줌 geulhaejum.kr · 법인영업 업무 도구 · 무단 복제·배포·역설계 금지 · build {date} {sig} */"
+TOOLS_BANNER = "/*! (c) 2026 소통마케팅센터 · 글해줌 geulhaejum.kr · 법인영업 업무 도구 · 무단 복제·배포·역설계 금지 · build {date} {sig} · TR-{tid} */"
 
 
-def _minify_tools(root):
+def _minify_tools(root, tid):
     """root 아래 .js/.mjs 를 제자리에서 압축한다. esbuild 가 없으면 빌드를 멈춘다(보호가 조용히 꺼지면 안 되니까)."""
     import subprocess
     files = sorted(p for p in root.rglob("*") if p.suffix in (".js", ".mjs"))
     sig = hashlib.sha256(b"".join(p.read_bytes() for p in files)).hexdigest()[:12]
-    banner = TOOLS_BANNER.format(date=date.today().isoformat(), sig=sig)
+    banner = TOOLS_BANNER.format(date=date.today().isoformat(), sig=sig, tid=tid)
     npx = shutil.which("npx") or shutil.which("npx.cmd")
     if not npx:
         raise SystemExit("npx 가 없어 도구 코드를 압축할 수 없다(node 설치 필요). 압축 없이 배포하지 않는다.")
@@ -925,8 +925,13 @@ def main():
     if tool_src.exists():
         shutil.copytree(tool_src, DIST / "tools" / "corp")
         _seo_tool_pages(DIST / "tools" / "corp", f"{site}/tools/corp/", site)
-        n_js, sig = _minify_tools(DIST / "tools" / "corp")
-        print(f"도구 코드 압축 {n_js}개 (서명 {sig})")
+        # 세대별 유출 추적 표식(11/17) — 방식은 비공개 저장소(법인도구/leak_trace.py)에만 있다. 없으면 빌드를 멈춘다.
+        sys.path.insert(0, str(TOOLS.parent))
+        import leak_trace
+        tid = leak_trace.unit_id(ROOT)
+        n_tr, n_zw = leak_trace.stamp(DIST / "tools" / "corp", tid)
+        n_js, sig = _minify_tools(DIST / "tools" / "corp", tid)
+        print(f"도구 코드 압축 {n_js}개 (서명 {sig}) · 추적 표식 코드 {n_tr}곳·화면 {n_zw}쪽")
         # 큰 카드 하나(도구) + 옆 카드 둘(법령 서재·서식). 템플릿 CSS 는 templates/tools.html 안에.
         tools_links += (
             '<section class="tfeat">'
