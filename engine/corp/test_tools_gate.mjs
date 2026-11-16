@@ -70,4 +70,11 @@ r = await worker.fetch(req('/'), env); assert.equal(await r.text(), 'ASSET');
   r = await worker.fetch(req('/tools/', { headers: { Cookie: 'tools_auth=' + '0'.repeat(64) } }), envP); assert.equal(r.status, 401);
   r = await worker.fetch(req('/tools/', { headers: { Cookie: jar } }), envP); assert.equal(r.status, 401);
   assert.equal(calls.length, n3, '비밀번호 모드는 글해줌 서버를 부르지 않는다'); }
-console.log('A~H 통과');
+// I 대입 막기(11/17): 같은 IP 5번 틀리면 맞는 비밀번호도 429, 다른 IP 는 그대로 들어간다
+{ const envP = { ...env, TOOLS_PASSWORD: '1111' };
+  const at = (ip, pw) => req('/tools/', { method: 'POST', body: new URLSearchParams({ pw }),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'CF-Connecting-IP': ip } });
+  for (let i = 0; i < 5; i++) { r = await worker.fetch(at('9.9.9.9', 'x' + i), envP); assert.equal(r.status, 401); }
+  r = await worker.fetch(at('9.9.9.9', '1111'), envP); assert.equal(r.status, 429); assert.match(await r.text(), /잠겼습니다/);
+  r = await worker.fetch(at('8.8.8.8', '1111'), envP); assert.equal(r.status, 303); }
+console.log('A~I 통과');

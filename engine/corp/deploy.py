@@ -86,6 +86,7 @@ if __name__ == "__main__":
         sys.exit(__doc__)
     if sys.argv[1] == "new":
         sys.exit(new_unit(*sys.argv[2:5]))
+    failed = []
     for u in corp_units(sys.argv[1]):
         cfg = json.loads((u / "config.json").read_text(encoding="utf-8"))
         project, site = cfg["pages_project"], cfg["site_url"].rstrip("/")
@@ -106,6 +107,8 @@ if __name__ == "__main__":
         if AUDIT.exists():
             code, out = run([sys.executable, "-X", "utf8", str(AUDIT), "dist", site], u)
             print("    점검:", (out.strip().splitlines() or ["(출력 없음)"])[-1])
-            if code:
-                sys.exit(f"{u.name}: 올라간 사이트 점검 FAIL — 고치고 다시 올리세요\n"
-                         + "\n".join(l for l in out.splitlines() if "FAIL" in l))
+            if code:   # 이미 올라간 뒤라 다른 세대는 계속 올리고, 끝에 모아서 알린다
+                failed.append(u.name)
+                print("\n".join(l for l in out.splitlines() if "FAIL" in l))
+    if failed:
+        sys.exit(f"올라간 사이트 점검 FAIL 세대: {', '.join(failed)} — 고치고 다시 올리세요")

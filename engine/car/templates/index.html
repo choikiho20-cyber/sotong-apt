@@ -191,6 +191,8 @@
         <input type="checkbox" name="consent" required>
         <span>상담 답변을 위해 성함과 연락처를 수집하는 데 동의합니다. 답변이 끝나면 파기합니다.</span>
       </label>
+      <!-- 스팸 로봇용 숨은 칸: 사람에겐 안 보이고 로봇만 채운다. 채워져 오면 서버가 조용히 버린다 (11/17) -->
+      <label class="hp" aria-hidden="true">홈페이지 <input name="website" tabindex="-1" autocomplete="off"></label>
       <button class="btn btn-solid" type="submit">문의 남기기</button>
       <p class="form-done" hidden>문의가 접수되었습니다. 하루 안에 연락드리겠습니다.</p>
     </form>

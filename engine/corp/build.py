@@ -390,7 +390,7 @@ _TFEAT_ART = ('<svg class="tfeat-art" viewBox="0 0 240 180" aria-hidden="true">'
 # 쿠키엔 마지막 확인 날짜가 들어 있어 날이 바뀌면 비밀번호 없이(TOOLS_API_KEY) 구독 상태를 다시 묻는다 → 해지·미납이면 하루 안에 멈춘다.
 # 서버가 안 받아지면 닫힌다(fail-closed) — "구독 끊기면 작동 안 되게"의 뜻이 그것이다(2026-11-07 대표님).
 # Pages 환경변수: TOOLS_API_KEY(글해줌 서버 .env 와 같은 값, secret) · TOOLS_OWNER_EMAIL(이 사이트 주인 계정, 비우면 구독자 누구나) · GEULHAEJUM_URL(기본 https://geulhaejum.kr)
-# 두 모드(11/7 대표님 "당장은 1111로 통일, 팔 때 글해줌 연동"): TOOLS_PASSWORD 가 있으면 단순 비밀번호 문(견본·시연용), 없으면 글해줌 로그인 문(판매용).
+# 두 모드(11/7 대표님 "당장은 비밀번호 하나로 통일, 팔 때 글해줌 연동" — 11/17 견본 비밀번호를 길게 바꿈, 값은 도구_비밀번호_bizsample.txt): TOOLS_PASSWORD 가 있으면 단순 비밀번호 문(견본·시연용), 없으면 글해줌 로그인 문(판매용).
 # 팔 때는 그 사이트 Pages 에서 TOOLS_PASSWORD 를 지우고 TOOLS_API_KEY·TOOLS_OWNER_EMAIL 을 넣는다.
 WORKER_JS = r"""// 법인영업 홈페이지 — /tools/ 글해줌 구독 문. 나머지 주소는 정적 파일 그대로 (build.py 가 만든다).
 // ponytail: 틀린 비밀번호 횟수 제한은 글해줌 서버 rate_limit(30/시간)에 맡긴다.
@@ -424,16 +424,28 @@ function gate(msg, status, form = FORM_GEUL) {
   return new Response(GATE.replace('{{form}}', form).replace('{{msg}}', msg), { status, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
 }
 const cookie = (email, day, sig) => `tools_auth=${encodeURIComponent(email)}|${day}|${sig}; Path=/tools; Max-Age=2592000; HttpOnly; Secure; SameSite=Lax`;
+// 비밀번호 대입 막기(11/17): 같은 곳(IP)에서 10분에 5번 틀리면 10분 잠금. 일꾼(isolate) 메모리라 완벽하진 않지만
+// 한 곳에서 몰아치는 대입은 여기서 멈춘다. 근본은 긴 비밀번호 — 견본 비밀번호는 도구_비밀번호_bizsample.txt.
+const FAILS = new Map(), WINDOW = 600000, MAX_FAILS = 5;
+const blocked = ip => { const r = FAILS.get(ip); return !!r && Date.now() - r[1] < WINDOW && r[0] >= MAX_FAILS; };
+function failed(ip) {
+  const r = FAILS.get(ip);
+  if (!r || Date.now() - r[1] >= WINDOW) FAILS.set(ip, [1, Date.now()]); else r[0]++;
+  if (FAILS.size > 5000) FAILS.clear();
+}
+const TOO_MANY = '비밀번호를 여러 번 틀려 10분 동안 잠겼습니다. 잠시 뒤 다시 해 주세요.';
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (!url.pathname.startsWith('/tools')) return env.ASSETS.fetch(request);
+    const ip = request.headers.get('CF-Connecting-IP') || 'local';
     if (env.TOOLS_PASSWORD) {                           // 단순 비밀번호 문(견본·시연). 팔 때는 이 변수를 지운다.
       const tok = await sha('corp-tools-v1:' + env.TOOLS_PASSWORD);
       if (request.method === 'POST') {
+        if (blocked(ip)) return gate(TOO_MANY, 429, FORM_PW);
         const form = await request.formData();
-        if (String(form.get('pw') || '') !== env.TOOLS_PASSWORD) return gate('비밀번호가 틀렸습니다.', 401, FORM_PW);
+        if (String(form.get('pw') || '') !== env.TOOLS_PASSWORD) { failed(ip); return gate('비밀번호가 틀렸습니다.', 401, FORM_PW); }
         return new Response(null, { status: 303, headers: {
           'Location': url.pathname.endsWith('/') || url.pathname.endsWith('.html') ? url.pathname : '/tools/',
           'Set-Cookie': `tools_auth=${tok}; Path=/tools; Max-Age=2592000; HttpOnly; Secure; SameSite=Lax` } });
@@ -442,12 +454,13 @@ export default {
       return c && c[1] === tok ? env.ASSETS.fetch(request) : gate('', 401, FORM_PW);
     }
     if (request.method === 'POST') {
+      if (blocked(ip)) return gate(TOO_MANY, 429);
       const form = await request.formData();
       const email = String(form.get('email') || '').trim().toLowerCase();
       const pw = String(form.get('pw') || '');
       if (!email || !pw) return gate('이메일과 비밀번호를 넣어 주세요.', 401);   // 빈 비밀번호가 key 재확인 경로로 새지 않게(11/7 보안검토)
       const v = await ask(env, email, pw);
-      if (!v.ok) return gate(v.reason, 401);
+      if (!v.ok) { failed(ip); return gate(v.reason, 401); }
       const day = today();
       return new Response(null, { status: 303, headers: {
         'Location': url.pathname.endsWith('/') || url.pathname.endsWith('.html') ? url.pathname : '/tools/',

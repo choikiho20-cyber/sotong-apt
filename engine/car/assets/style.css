@@ -365,6 +365,7 @@ a.card:hover { background: var(--surface-2); }
 .consent input { width: 18px; height: 18px; accent-color: var(--gold); }
 #inq-form button { justify-self: start; }
 .form-done { color: var(--gold); font-size: 14px; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; } /* 스팸 로봇용 숨은 칸 */
 .contact-alt { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 34px; }
 
 /* ---------- 신원 확인 ---------- */
