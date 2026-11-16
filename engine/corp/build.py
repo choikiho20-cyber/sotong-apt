@@ -11,6 +11,7 @@ import hashlib
 import html
 import json
 import re
+import secrets
 import shutil
 import sys
 from datetime import date
@@ -523,6 +524,45 @@ def _seo_tool_pages(root, base, site):
             p.write_text(h.replace("</title>", "</title>" + add, 1), encoding="utf-8")
 
 
+def llms_txt(cfg, site, posts):
+    """AI 검색이 JS 없이 한 번에 읽는 요약본. 화면·JSON-LD 와 같은 값에서 나온다(상호·지역·전화 통일). 자동차 단지와 같은 틀."""
+    nl = "\n"
+    return f"""# {cfg['region']} 법인 경영 컨설턴트 {cfg['name']}
+
+> {cfg['tagline']}
+
+## 기본 정보
+- 이름: {cfg['name']} (법인 경영 컨설턴트 · 재무 구조·승계 설계)
+- 활동 지역: {cfg.get('region_official', cfg['region'])}
+- 전화: {cfg['phone']}
+- 홈페이지: {site}/
+- 세금 신고·법률 서류처럼 자격이 필요한 일은 세무사·변호사 등 해당 전문가가 수행합니다.
+
+## 하는 일
+{nl.join(f"- {c}" for c in cfg.get('career', []))}
+
+## 자주 묻는 질문
+{nl.join(f"- {f['q']} — {f['a']}" for f in cfg.get('faq', []))}
+
+## 정리한 글
+{nl.join(f"- [{p['title']}]({site}/posts/{p['slug']}) ({p.get('date', '')}): {p.get('description', '')}" for p in posts)}
+
+## 채널
+{nl.join(f"- {c['name']}: {c['url']}" for c in cfg.get('channels', [])) or '- (아직 없음)'}
+"""
+
+
+def copy_indexnow_key():
+    """IndexNow 키(32자리 hex.txt, 내용=파일명). 없으면 세대 폴더에 하나 만들고 dist 로 복사.
+    deploy.py 가 올린 뒤 이 키로 빙·네이버·얀덱스 등에 한 번에 알린다(임시 주소는 noindex 라 건너뜀)."""
+    keys = [p for p in ROOT.glob("*.txt") if re.fullmatch(r"[0-9a-f]{32}\.txt", p.name)]
+    if not keys:
+        k = secrets.token_hex(16)
+        (ROOT / f"{k}.txt").write_text(k, encoding="utf-8")
+        keys = [ROOT / f"{k}.txt"]
+    shutil.copy2(keys[0], DIST / keys[0].name)
+
+
 def render(template, mapping):
     for k, v in mapping.items():
         template = template.replace("{{" + k + "}}", str(v))
@@ -590,6 +630,7 @@ def main():
             if cfg.get("hero_video") else ""
         ),
         "year": date.today().year,
+        "updated": date.today().isoformat(),
         "reg_display": _reg_display(cfg),
         "naver_verification_meta": (
             f'<meta name="naver-site-verification" content="{cfg["naver_verification"]}">'
@@ -895,6 +936,8 @@ def main():
     sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     sitemap += "".join(f"  <url><loc>{u}</loc></url>\n" for u in urls) + "</urlset>\n"
     (DIST / "sitemap.xml").write_text(sitemap, encoding="utf-8")
+    (DIST / "llms.txt").write_text(llms_txt(cfg, site, posts), encoding="utf-8")
+    copy_indexnow_key()
     # 임시 배포 주소는 색인을 막는다. 버릴 주소에 검색을 쌓으면 도메인 이전 때 그만큼 손해.
     staging = any(h in site for h in ("pages.dev", "netlify.app", "vercel.app", "github.io", "example.com"))
     if staging:
@@ -905,7 +948,9 @@ def main():
             "User-agent: *\nDisallow: /\n", encoding="utf-8")
     else:
         (DIST / "robots.txt").write_text(
-            f"User-agent: *\nAllow: /\nDisallow: /tools/\nSitemap: {site}/sitemap.xml\n", encoding="utf-8")
+            f"User-agent: *\nAllow: /\nDisallow: /tools/\nSitemap: {site}/sitemap.xml\n"
+            + (f"#DaumWebMasterTool:{cfg['daum_verification']}\n" if cfg.get("daum_verification") else ""),  # 다음 웹마스터도구 소유 확인
+            encoding="utf-8")
 
     # config.json도 화면에 그대로 노출되므로 글과 같은 기준으로 검사한다.
     # affiliation은 의도적 표기라 일반 스캔에서 빼고 아래 [!] 항목으로 따로 고지 —

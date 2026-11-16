@@ -283,16 +283,21 @@ def main(U):
 ## 자주 묻는 질문
 {nl.join(f"- Q. {q}{nl}  A. {x}" for q, x in faq)}
 """, encoding="utf-8")
-    (D / "robots.txt").write_text("User-agent: *\nAllow: /\n" + (f"Sitemap: {domain}/sitemap.xml\n" if domain and not noindex else ""), encoding="utf-8")
+    (D / "robots.txt").write_text("User-agent: *\nAllow: /\n" + (f"Sitemap: {domain}/sitemap.xml\n" if domain and not noindex else "")
+                                  + (f"#DaumWebMasterTool:{cfg['daum_verification']}\n" if cfg.get("daum_verification") else ""),  # 다음 웹마스터도구 소유 확인
+                                  encoding="utf-8")
     if domain and not noindex:
         urls = [f"{domain}/"] + [f"{domain}/{p}" for p, _ in MENU]
         (D / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
                                        + "".join(f"  <url><loc>{u}</loc><lastmod>{today}</lastmod></url>\n" for u in urls) + "</urlset>\n", encoding="utf-8")
     for f in S.iterdir():
         shutil.copy(f, D / f.name)
-    for k in U.glob("*.txt"):
-        if re.fullmatch(r"[0-9a-f]{32}", k.stem):
-            shutil.copy(k, D / k.name)
+    keys = [k for k in U.glob("*.txt") if re.fullmatch(r"[0-9a-f]{32}", k.stem)]
+    if not keys:   # IndexNow 키는 세대마다 하나 — 없으면 만든다(llms.txt·최종 수정일과 함께 모든 홈페이지 기본값, 11/17)
+        k = os.urandom(16).hex()
+        (U / f"{k}.txt").write_text(k, encoding="utf-8")
+        keys = [U / f"{k}.txt"]
+    shutil.copy(keys[0], D / keys[0].name)
     print(f"빌드 완료: {D} · 페이지 {len(MENU) + 2}개 · 객실 {len(rooms)} · 사진 {len(size)}장" + (" · 검색 막힘(noindex, 견본)" if noindex else ""))
 
 

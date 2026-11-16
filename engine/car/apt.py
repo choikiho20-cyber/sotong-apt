@@ -25,6 +25,7 @@ APT = ENGINE.parents[1]
 UNITS = APT / "units"
 TRACK = APT.parent / "car-track"
 OWNER = "choikiho20-cyber"
+AUDIT = Path.home() / ".claude" / "skills" / "homepage-seo" / "audit.py"   # 홈페이지 검색 점검표(FAIL 0 이어야 납품)
 ENGINE_REPO = f"{OWNER}/sotong-apt"
 WIN = sys.platform == "win32"
 
@@ -83,6 +84,7 @@ def cmd_build(a):
 
 
 def cmd_deploy(a):
+    failed = []
     for u in units(a.unit):
         c = cfg_of(u)
         print(f"[{u.name}]")
@@ -94,6 +96,16 @@ def cmd_deploy(a):
             sh(["gh", "workflow", "run", "build", "-R", c["admin_repo"]], u)
         else:
             print("    배포 대상 아님(cf_project·admin_repo 둘 다 없음)")
+            continue
+        # 올라간 실주소를 AI 로봇처럼 들어가 본다 — 도메인 안내소를 Cloudflare 로 옮긴 날 'AI 로봇 막기'가 켜지는 사고를 잡는다.
+        if AUDIT.exists() and (u / "dist").exists() and c.get("site_url"):
+            ok, out = sh([sys.executable, "-X", "utf8", str(AUDIT), "dist", c["site_url"].rstrip("/")], u, check=False)
+            print("    점검:", out.splitlines()[-1] if out else "")
+            if not ok:
+                failed.append(u.name)
+                print("\n".join(l for l in out.splitlines() if "FAIL" in l))
+    if failed:
+        sys.exit(f"점검 FAIL 세대: {', '.join(failed)} — 고치고 다시 올리세요")
 
 
 WORKFLOW = """# 이 세대 저장소엔 설정·사진·글만 있다. 지을 때 엔진(sotong-apt)을 받아 와서 짓는다.

@@ -8,11 +8,15 @@ import re
 import shutil
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
+from urllib.parse import urlparse
 
 ENGINE = Path(__file__).resolve().parent
 UNITS = ENGINE.parents[1] / "units"
 SAMPLE = UNITS / "demo-corp"
+AUDIT = Path.home() / ".claude" / "skills" / "homepage-seo" / "audit.py"   # 홈페이지 검색 점검표(FAIL 0 이어야 납품)
 # 견본의 문구(소개·상황·FAQ·글)는 물려받고, 사람에 붙은 값은 비운다.
 # 사진은 복사하지 않는다 — 앞 사람 얼굴이 따라오는 사고가 구조적으로 생길 수 없게(자동차 단지와 같은 규칙).
 RESET = dict(years="", kakao_url="", channels=[], og_title="", og_description="", hero_caption="", hero_video="",
@@ -54,6 +58,24 @@ def corp_units(name):
     return us or sys.exit(f"법인 단지 세대가 없습니다: {name}")
 
 
+def ping_indexnow(u, site):
+    """올린 뒤 sitemap 주소 전부를 IndexNow 로 한 번에 알린다(빙·네이버·얀덱스 등 참여 엔진이 서로 나눠 받음).
+    임시 주소(noindex)는 색인 대상이 아니라 건너뛴다."""
+    if "noindex" in (u / "dist" / "index.html").read_text(encoding="utf-8"):
+        return "임시 주소(noindex)라 건너뜀"
+    key = next((p.stem for p in u.glob("*.txt") if re.fullmatch(r"[0-9a-f]{32}", p.stem)), None)
+    urls = re.findall(r"<loc>([^<]+)</loc>", (u / "dist" / "sitemap.xml").read_text(encoding="utf-8"))
+    body = json.dumps({"host": urlparse(site).netloc, "key": key, "keyLocation": f"{site}/{key}.txt", "urlList": urls}).encode()
+    req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body,
+                                 headers={"Content-Type": "application/json; charset=utf-8"})
+    try:
+        return f"{len(urls)}개 → {urllib.request.urlopen(req, timeout=15).status}"
+    except urllib.error.HTTPError as e:
+        return f"{len(urls)}개 → {e.code} (실패, 사이트는 올라감)"
+    except Exception as e:
+        return f"실패 {e} (사이트는 올라감)"
+
+
 def run(cmd, cwd):
     r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace", shell=(cmd[0] == "npx"))
     return r.returncode, (r.stdout or "") + (r.stderr or "")
@@ -65,7 +87,8 @@ if __name__ == "__main__":
     if sys.argv[1] == "new":
         sys.exit(new_unit(*sys.argv[2:5]))
     for u in corp_units(sys.argv[1]):
-        project = json.loads((u / "config.json").read_text(encoding="utf-8"))["pages_project"]
+        cfg = json.loads((u / "config.json").read_text(encoding="utf-8"))
+        project, site = cfg["pages_project"], cfg["site_url"].rstrip("/")
         print(f"[{u.name}] → {project}")
         code, out = run([sys.executable, "-X", "utf8", "build.py"], u)
         print("   ", " / ".join(l for l in out.splitlines() if l.startswith(("빌드 완료", "도구 코드"))) or out[-400:])
@@ -78,3 +101,11 @@ if __name__ == "__main__":
         print("   ", (out.strip().splitlines() or ["(출력 없음)"])[-1])
         if code:
             sys.exit(f"{u.name}: 올리기 실패\n{out[-600:]}")
+        print("    IndexNow:", ping_indexnow(u, site))
+        # 올라간 실물을 AI 로봇처럼 들어가 본다 — 도메인 안내소를 Cloudflare 로 옮긴 날 'AI 로봇 막기'가 켜지는 사고를 여기서 잡는다.
+        if AUDIT.exists():
+            code, out = run([sys.executable, "-X", "utf8", str(AUDIT), "dist", site], u)
+            print("    점검:", (out.strip().splitlines() or ["(출력 없음)"])[-1])
+            if code:
+                sys.exit(f"{u.name}: 올라간 사이트 점검 FAIL — 고치고 다시 올리세요\n"
+                         + "\n".join(l for l in out.splitlines() if "FAIL" in l))

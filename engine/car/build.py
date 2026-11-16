@@ -935,7 +935,9 @@ def main():
         (DIST / "robots.txt").write_text("User-agent: *\nDisallow: /\n", encoding="utf-8")
     else:
         (DIST / "robots.txt").write_text(
-            f"User-agent: *\nAllow: /\nDisallow: /admin.html\nSitemap: {site}/sitemap.xml\n", encoding="utf-8")
+            f"User-agent: *\nAllow: /\nDisallow: /admin.html\nSitemap: {site}/sitemap.xml\n"
+            + (f"#DaumWebMasterTool:{cfg['daum_verification']}\n" if cfg.get("daum_verification") else ""),  # 다음 웹마스터도구 소유 확인
+            encoding="utf-8")
 
     (DIST / "llms.txt").write_text(llms_txt(cfg, site, posts, lineup, n_models), encoding="utf-8")
     (DIST / "404.html").write_text(page_404(cfg, phone_digits), encoding="utf-8")
