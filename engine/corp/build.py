@@ -420,8 +420,13 @@ async function ask(env, email, password) {
 // 서명에 사이트 주소(host)를 넣는다: 설계사 사이트마다 같은 TOOLS_API_KEY 를 쓰므로, 넣지 않으면 A 사이트 쿠키가 B 사이트에서 통한다 (11/13 보안검토)
 const sign = (env, host, email, day) => sha('corp-tools-v3:' + env.TOOLS_API_KEY + ':' + host + ':' + email + ':' + day);
 const isOwner = (env, email) => !env.TOOLS_OWNER_EMAIL || email === env.TOOLS_OWNER_EMAIL.trim().toLowerCase();
+// 문 화면은 일꾼이 직접 만들어 _headers 가 안 붙는다 → 보안 머리글을 여기서 붙인다(스크립트 없음, 스타일만 안에).
+const GATE_SEC = {
+  'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains', 'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Robots-Tag': 'noindex, nofollow' };
 function gate(msg, status, form = FORM_GEUL) {
-  return new Response(GATE.replace('{{form}}', form).replace('{{msg}}', msg), { status, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+  return new Response(GATE.replace('{{form}}', form).replace('{{msg}}', msg), { status, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', ...GATE_SEC } });
 }
 const cookie = (email, day, sig) => `tools_auth=${encodeURIComponent(email)}|${day}|${sig}; Path=/tools; Max-Age=2592000; HttpOnly; Secure; SameSite=Lax`;
 // 비밀번호 대입 막기(11/17): 같은 곳(IP)에서 10분에 5번 틀리면 10분 잠금. 일꾼(isolate) 메모리라 완벽하진 않지만
@@ -574,6 +579,25 @@ def copy_indexnow_key():
         (ROOT / f"{k}.txt").write_text(k, encoding="utf-8")
         keys = [ROOT / f"{k}.txt"]
     shutil.copy2(keys[0], DIST / keys[0].name)
+
+
+# 보안 머리글 A+ — 두 단지 공용 부품 engine/sec_headers.py 가 쓴다. 여기는 법인 도구가 실제로 부르는 바깥 주소만:
+# PDF 읽기(pdf.js)·압축(jszip)=cdnjs, PPT(pptxgenjs)·글자 인식(tesseract)·영상(mediabunny)=jsdelivr,
+# 글자 인식 언어 자료=tessdata.projectnaptha.com, 음성=Google TTS, 법령 감시=geulhaejum.kr. 새 바깥 자원을 붙이면 여기에 그 주소만 더한다.
+SEC_SCRIPT = ("https://cdn.jsdelivr.net/npm/ https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/ "
+              "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/")
+SEC_CONNECT = ("https://geulhaejum.kr https://texttospeech.googleapis.com https://cdn.jsdelivr.net "
+               "https://cdnjs.cloudflare.com https://tessdata.projectnaptha.com")
+
+
+def write_sec_headers(cfg):
+    sys.path.insert(0, str(ENGINE.parent))
+    import sec_headers
+    track = re.match(r"https?://[^/]+", cfg.get("track_url") or "")
+    return sec_headers.write(
+        DIST, script=SEC_SCRIPT, wasm=True, worker=True, media="blob: data:",
+        style="https://fonts.googleapis.com https://cdn.jsdelivr.net", font="data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
+        connect="blob: data: " + SEC_CONNECT + (" " + track.group(0) if track else ""))
 
 
 def render(template, mapping):
@@ -980,6 +1004,8 @@ def main():
     # 고객에게 요청할 준비물 안내 (배포물이 아니므로 dist/가 아닌 작업 폴더에 둔다)
     todo, todo_n = client_todo(cfg, ROOT, len(full_pages))
     (ROOT / "고객에게_보낼_안내.txt").write_text(todo, encoding="utf-8")
+    n_js, n_on = write_sec_headers(cfg)   # dist 를 다 지은 뒤 마지막에 — 페이지 안 코드 지문을 떠야 하므로
+    print(f"보안 머리글: dist/_headers (페이지 안 스크립트 {n_js}개·인라인 이벤트 {n_on}개 지문 허용)")
 
     if not cfg["track_url"]:
         print("[경고] track_url이 비어 있어 문의 추적이 꺼진 상태로 빌드됨 (지시서 6장: 추적 없으면 3개월 안에 이탈)")

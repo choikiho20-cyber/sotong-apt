@@ -968,13 +968,25 @@ def main():
     scanned = {k: v for k, v in cfg.items() if k not in ("dealership", "dealership_phone_note")}
     cfg_doc = {"label": "config.json", "text": json.dumps(scanned, ensure_ascii=False, indent=1)}
     checklist, ok = ad_check(posts + [cfg_doc], dealership)
-    (DIST / "광고점검표.txt").write_text(checklist, encoding="utf-8")
+    # dist/에 두면 사이트와 함께 공개된다(누구나 /광고점검표.txt 로 열람, 11/17 발견). 작업 폴더에만 둔다.
+    (ROOT / "광고점검표.txt").write_text(checklist, encoding="utf-8")
     print(checklist)
     print()
 
     # 고객에게 요청할 준비물 안내 (배포물이 아니므로 dist/가 아닌 작업 폴더에 둔다)
     todo, todo_n = client_todo(cfg, ROOT)
     (ROOT / "고객에게_보낼_안내.txt").write_text(todo, encoding="utf-8")
+
+    # 보안 머리글 A+ (11/17, 두 단지 공용 engine/sec_headers.py). dist 를 다 지은 뒤 마지막에 — 페이지 안 코드 지문을 떠야 하므로.
+    # 바깥: 글꼴(구글·jsdelivr), 시승 영상(youtube-nocookie), 문의·열람 서버(track_url). 관리 화면은 GitHub API·문의 서버만.
+    sys.path.insert(0, str(ENGINE.parent))
+    import sec_headers
+    track = re.match(r"https?://[^/]+", cfg.get("track_url") or "")
+    n_js, n_on = sec_headers.write(
+        DIST, style="https://fonts.googleapis.com https://cdn.jsdelivr.net", font="https://fonts.gstatic.com https://cdn.jsdelivr.net",
+        frame="https://www.youtube-nocookie.com", connect=track.group(0) if track else "",
+        admin=("admin.html",), admin_connect=track.group(0) if track else "")
+    print(f"보안 머리글: dist/_headers (페이지 안 스크립트 {n_js}개·인라인 이벤트 {n_on}개 지문 허용, 관리 화면 따로)")
 
     if not cfg["track_url"]:
         print("[경고] track_url이 비어 있어 문의 추적이 꺼진 상태로 빌드됨 (추적이 없으면 성과를 못 보여줌)")
