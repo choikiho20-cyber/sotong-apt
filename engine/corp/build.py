@@ -443,6 +443,8 @@ const TOO_MANY = '비밀번호를 여러 번 틀려 10분 동안 잠겼습니다
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    // www.주소 → 점 없는 주소로 301 — 검색엔진·AI 에 주소를 하나로 모은다
+    if (url.hostname.startsWith('www.')) { url.hostname = url.hostname.slice(4); return Response.redirect(url.toString(), 301); }
     if (!url.pathname.startsWith('/tools')) return env.ASSETS.fetch(request);
     const ip = request.headers.get('CF-Connecting-IP') || 'local';
     if (env.TOOLS_PASSWORD) {                           // 단순 비밀번호 문(견본·시연). 팔 때는 이 변수를 지운다.

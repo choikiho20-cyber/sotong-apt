@@ -77,4 +77,7 @@ r = await worker.fetch(req('/'), env); assert.equal(await r.text(), 'ASSET');
   for (let i = 0; i < 5; i++) { r = await worker.fetch(at('9.9.9.9', 'x' + i), envP); assert.equal(r.status, 401); }
   r = await worker.fetch(at('9.9.9.9', '1111'), envP); assert.equal(r.status, 429); assert.match(await r.text(), /잠겼습니다/);
   r = await worker.fetch(at('8.8.8.8', '1111'), envP); assert.equal(r.status, 303); }
-console.log('A~I 통과');
+// J www.주소는 점 없는 주소로 301 (경로·물음표 그대로)
+r = await worker.fetch(new Request('https://www.site.test/posts/a?x=1'), env);
+assert.equal(r.status, 301); assert.equal(r.headers.get('Location'), 'https://site.test/posts/a?x=1');
+console.log('A~J 통과');
