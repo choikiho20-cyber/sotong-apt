@@ -445,6 +445,10 @@ export default {
     const url = new URL(request.url);
     // www.주소 → 점 없는 주소로 301 — 검색엔진·AI 에 주소를 하나로 모은다
     if (url.hostname.startsWith('www.')) { url.hostname = url.hostname.slice(4); return Response.redirect(url.toString(), 301); }
+    // 옛 임시 주소(<프로젝트>.pages.dev) → 정식 주소로 301. 옛 링크로 온 손님 문의도 들어가고(문의 서버는 보낸 주소 = 사이트 이름만 받는다),
+    // 검색엔진엔 주소가 하나. 배포마다 생기는 미리보기 주소(<해시>.<프로젝트>.pages.dev)는 그대로. HOME 은 build.py 가 정식 주소일 때만 채운다.
+    const HOME = '__HOME__';
+    if (HOME && /^[^.]+\.pages\.dev$/.test(url.hostname)) { url.hostname = HOME; return Response.redirect(url.toString(), 301); }
     if (!url.pathname.startsWith('/tools')) return env.ASSETS.fetch(request);
     const ip = request.headers.get('CF-Connecting-IP') || 'local';
     if (env.TOOLS_PASSWORD) {                           // 단순 비밀번호 문(견본·시연). 팔 때는 이 변수를 지운다.
@@ -981,8 +985,11 @@ def main():
             "url": f"{site}/tools/", "inLanguage": "ko", "isPartOf": {"@type": "WebSite", "url": f"{site}/"},
         }, ensure_ascii=False)}), encoding="utf-8")
     (DIST / "404.html").write_text(render(tpl("404.html"), common), encoding="utf-8")
+    # 임시 배포 주소는 색인을 막는다. 버릴 주소에 검색을 쌓으면 도메인 이전 때 그만큼 손해.
+    staging = any(h in site for h in ("pages.dev", "netlify.app", "vercel.app", "github.io", "example.com"))
     # /tools/ 글해줌 구독 문 — Cloudflare Pages 가 dist/_worker.js 를 먼저 태운다. 설정은 WORKER_JS 위 주석.
-    (DIST / "_worker.js").write_text(WORKER_JS, encoding="utf-8")
+    (DIST / "_worker.js").write_text(
+        WORKER_JS.replace("__HOME__", "" if staging else re.sub(r"^https?://", "", site).split("/")[0]), encoding="utf-8")
 
     # SEO: sitemap + robots (발행 시마다 자동 갱신)
     # Cloudflare Pages는 .html 주소를 확장자 없는 주소로 308 넘긴다. 검색엔진에는 최종 주소를 알려야 한다.
@@ -993,8 +1000,6 @@ def main():
     (DIST / "llms.txt").write_text(llms_txt(cfg, site, posts), encoding="utf-8")
     copy_indexnow_key()
     write_favicon(cfg)
-    # 임시 배포 주소는 색인을 막는다. 버릴 주소에 검색을 쌓으면 도메인 이전 때 그만큼 손해.
-    staging = any(h in site for h in ("pages.dev", "netlify.app", "vercel.app", "github.io", "example.com"))
     if staging:
         # 링크 미리보기 봇(카톡 등)까지 막으면 공유 카드가 갱신되지 않는다. 검색 색인은 noindex 메타가 따로 막는다.
         (DIST / "robots.txt").write_text(

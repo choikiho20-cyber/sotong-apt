@@ -80,4 +80,11 @@ r = await worker.fetch(req('/'), env); assert.equal(await r.text(), 'ASSET');
 // J www.주소는 점 없는 주소로 301 (경로·물음표 그대로)
 r = await worker.fetch(new Request('https://www.site.test/posts/a?x=1'), env);
 assert.equal(r.status, 301); assert.equal(r.headers.get('Location'), 'https://site.test/posts/a?x=1');
-console.log('A~J 통과');
+// K 옛 임시 주소(프로젝트.pages.dev) → 정식 주소 301 — 정식 주소가 있는 세대만. 미리보기 주소(해시.프로젝트.pages.dev)는 그대로
+const home = (await import('node:fs')).readFileSync(process.cwd() + '/dist/_worker.js', 'utf8').match(/const HOME = '([^']*)'/)[1];
+r = await worker.fetch(new Request('https://proj.pages.dev/posts/a?x=1'), env);
+if (home) { assert.equal(r.status, 301); assert.equal(r.headers.get('Location'), `https://${home}/posts/a?x=1`); }
+else assert.equal(await r.text(), 'ASSET');
+r = await worker.fetch(new Request('https://ab12cd34.proj.pages.dev/posts/a'), env);
+assert.equal(await r.text(), 'ASSET');
+console.log('A~K 통과' + (home ? ` (정식 주소 ${home})` : ' (임시 주소 세대 — 넘김 없음)'));
