@@ -26,8 +26,20 @@
   try { seen = sessionStorage.getItem("seen") === "1"; sessionStorage.setItem("seen", "1"); } catch (e) {}
   if (!seen) send("visit", to ? { to: to } : null);
 
+  // PC(마우스)엔 전화·문자 앱이 없다 — tel:/sms: 를 누르면 크롬이 '앱 선택' 창을 띄워 손님이 당황한다.
+  // PC 에선 그 자리에 번호를 보여주고 복사해 둔다. 폰·태블릿(손가락)은 그대로 전화·문자 앱.
+  var PC = !(window.matchMedia && matchMedia("(pointer: coarse)").matches);
   document.querySelectorAll("[data-ev]").forEach(function (el) {
-    el.addEventListener("click", function () { send(el.dataset.ev); });
+    el.addEventListener("click", function (e) {
+      send(el.dataset.ev);
+      var href = el.getAttribute("href") || "";
+      if (!PC || !/^(tel|sms):/.test(href)) return;
+      e.preventDefault();
+      var n = href.replace(/^(tel|sms):/, "").split("?")[0];
+      try { navigator.clipboard.writeText(n); } catch (x) {}
+      el.textContent = n.replace(/^(\d{2,3})(\d{3,4})(\d{4})$/, "$1-$2-$3");
+      el.title = "번호를 복사했습니다";
+    });
   });
 
   var form = document.getElementById("inq-form");
@@ -47,15 +59,22 @@
       });
       // 1) 서버 문의함에 보관(+텔레그램 알림)  2) 동시에 영업사원 폰으로 문자 —
       // 서버가 멈춰도 문의는 문자로 닿는다. 한국 손님에겐 문자 앱이 가장 확실한 길.
-      if (base) {
-        fetch(base + "/inquiry", {
+      var sent = !base ? null : fetch(base + "/inquiry", {
           method: "POST", keepalive: true, headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(Object.assign(data, { site: site, source: classifyReferrer(), to: to }))
-        }).catch(function () {});
+        }).then(function (r) { return r.ok; }, function () { return false; });
+      // 서버가 받았으면 PC 에선 문자 앱을 열지 않는다(앱 선택 창). 서버가 없으면 문자가 유일한 길이라 연다.
+      if (!base || !PC) {
+        var tel = document.querySelector('[data-ev="tel"]').getAttribute("href").replace("tel:", "");
+        location.href = "sms:" + tel + "?body=" + encodeURIComponent(lines.join("\n"));
       }
-      var tel = document.querySelector('[data-ev="tel"]').getAttribute("href").replace("tel:", "");
-      location.href = "sms:" + tel + "?body=" + encodeURIComponent(lines.join("\n"));
-      form.querySelector(".form-done").hidden = false;
+      var done = form.querySelector(".form-done");
+      // PC 는 서버가 유일한 길 — 못 받았으면 '접수됐다'고 두지 말고 번호를 안내한다(문의 유실 방지)
+      if (sent && PC) sent.then(function (ok) {
+        if (!ok) done.textContent = "전송이 되지 않았습니다. 번거로우시겠지만 전화나 문자로 연락 부탁드립니다: " +
+          document.querySelector('[data-ev="tel"]').getAttribute("href").replace("tel:", "").replace(/^(\d{2,3})(\d{3,4})(\d{4})$/, "$1-$2-$3");
+      });
+      done.hidden = false;
       form.querySelector("button").disabled = true;
     });
   }
