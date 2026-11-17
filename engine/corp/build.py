@@ -570,6 +570,15 @@ def llms_txt(cfg, site, posts):
 """
 
 
+def write_favicon(cfg):
+    """이름 첫 글자 파비콘. 브라우저 탭·검색 결과 옆에 나온다."""
+    ch = html.escape(cfg["name"][:1])
+    (DIST / "favicon.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="10" fill="#0f172a"/>'
+        f'<text x="24" y="33" font-size="26" font-weight="700" text-anchor="middle" fill="#fff" font-family="sans-serif">{ch}</text></svg>',
+        encoding="utf-8")
+
+
 def copy_indexnow_key():
     """IndexNow 키(32자리 hex.txt, 내용=파일명). 없으면 세대 폴더에 하나 만들고 dist 로 복사.
     deploy.py 가 올린 뒤 이 키로 빙·네이버·얀덱스 등에 한 번에 알린다(임시 주소는 noindex 라 건너뜀)."""
@@ -657,6 +666,7 @@ def main():
         "site_url": site,
         "og_image": og_image,
         "track_url": cfg["track_url"],
+        "site_id": re.sub(r"^https?://", "", site),
         "hero_image": cfg.get("hero_image", "assets/hero.svg"),
         "hero_cutout": cfg.get("hero_cutout") or cfg.get("hero_image", "assets/hero.svg"),
         # 가상 인물 샘플은 사진 밑에 그 사실을 적는다. 실제 고객 페이지에서는 config에서 비운다.
@@ -980,6 +990,7 @@ def main():
     (DIST / "sitemap.xml").write_text(sitemap, encoding="utf-8")
     (DIST / "llms.txt").write_text(llms_txt(cfg, site, posts), encoding="utf-8")
     copy_indexnow_key()
+    write_favicon(cfg)
     # 임시 배포 주소는 색인을 막는다. 버릴 주소에 검색을 쌓으면 도메인 이전 때 그만큼 손해.
     staging = any(h in site for h in ("pages.dev", "netlify.app", "vercel.app", "github.io", "example.com"))
     if staging:

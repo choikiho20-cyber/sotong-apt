@@ -469,3 +469,4 @@ footer { background: var(--cool); color: var(--slate); text-align: center; paddi
 .article table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.6; }
 .article th, .article td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .article thead th { background: var(--cool-2); font-weight: 700; color: var(--navy); }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; } /* 스팸 로봇용 숨은 칸 */

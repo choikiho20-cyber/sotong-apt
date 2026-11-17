@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f172a">
 {{robots_meta}}
@@ -27,7 +28,7 @@
 <script type="application/ld+json">{{jsonld}}</script>
 <script type="application/ld+json">{{faq_jsonld}}</script>
 </head>
-<body data-track="{{track_url}}">
+<body data-track="{{track_url}}" data-site="{{site_id}}">
 
 <header class="hero">
   {{hero_video}}
@@ -139,6 +140,7 @@
     <h2 class="sec-title">회사 이름만 남겨 주십시오. 분석은 제가 합니다</h2>
     <p class="sec-desc">회사명과 연락처만 남겨주시면 제가 직접, 하루 안에 연락드립니다. 전화가 편하시면 바로 걸어주세요.</p>
     <form id="inq-form">
+      <input type="hidden" name="inquiry_type" value="법인 상담">
       <label>성함 · 회사명 <input name="name" required autocomplete="name"></label>
       <label>연락처 <input name="phone" type="tel" required autocomplete="tel"></label>
       <label>궁금한 내용
@@ -149,6 +151,8 @@
         <input type="checkbox" name="consent" required>
         <span>상담 답변을 위해 성함과 연락처를 수집하는 데 동의합니다. 답변이 끝나면 파기합니다. <a href="privacy.html" target="_blank">개인정보처리방침</a></span>
       </label>
+      <!-- 스팸 로봇용 숨은 칸: 사람에겐 안 보이고 로봇만 채운다. 채워져 오면 서버가 조용히 버린다 -->
+      <label class="hp" aria-hidden="true">홈페이지 <input name="website" tabindex="-1" autocomplete="off"></label>
       <button class="btn btn-gold" type="submit">문의 남기기</button>
       <p class="form-done" hidden>문의가 접수되었습니다. 하루 안에 연락드리겠습니다.</p>
     </form>
