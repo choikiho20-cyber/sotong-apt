@@ -685,9 +685,13 @@ def main():
         "year": date.today().year,
         "updated": date.today().isoformat(),
         "reg_display": _reg_display(cfg),
-        "naver_verification_meta": (
-            f'<meta name="naver-site-verification" content="{cfg["naver_verification"]}">'
-            if cfg.get("naver_verification") else ""
+        # 검색엔진 소유 확인 메타(구글·네이버·빙). 지우면 소유 확인이 풀린다. 다음은 robots.txt(daum_verification)
+        "verification_meta": "".join(
+            f'<meta name="{name}" content="{cfg[key]}">'
+            for key, name in (("google_verification", "google-site-verification"),
+                              ("naver_verification", "naver-site-verification"),
+                              ("bing_verification", "msvalidate.01"))
+            if cfg.get(key)
         ),
         "robots_meta": (
             '<meta name="robots" content="noindex, nofollow">'
