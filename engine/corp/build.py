@@ -611,6 +611,7 @@ def write_sec_headers(cfg):
     track = re.match(r"https?://[^/]+", cfg.get("track_url") or "")
     return sec_headers.write(
         DIST, script=SEC_SCRIPT, wasm=True, worker=True, media="blob: data:",
+        frame="https://www.youtube-nocookie.com",   # 따라 하기 영상 창(법인도구/web/howto.js, 11/18)
         style="https://fonts.googleapis.com https://cdn.jsdelivr.net", font="data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
         connect="blob: data: " + SEC_CONNECT + (" " + track.group(0) if track else ""))
 

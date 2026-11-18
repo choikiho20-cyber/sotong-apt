@@ -20,7 +20,8 @@ AUDIT = Path.home() / ".claude" / "skills" / "homepage-seo" / "audit.py"   # 홈
 # 견본의 문구(소개·상황·FAQ·글)는 물려받고, 사람에 붙은 값은 비운다.
 # 사진은 복사하지 않는다 — 앞 사람 얼굴이 따라오는 사고가 구조적으로 생길 수 없게(자동차 단지와 같은 규칙).
 RESET = dict(years="", kakao_url="", channels=[], og_title="", og_description="", hero_caption="", hero_video="",
-             badges=[], credentials_are_samples=False, naver_verification="", track_url="")
+             badges=[], credentials_are_samples=False, naver_verification="", track_url="",
+             google_verification="", bing_verification="", daum_verification="")   # 검색엔진 소유 확인값은 사이트마다 다르다(11/18)
 
 
 def new_unit(name, given_path, domain=""):
