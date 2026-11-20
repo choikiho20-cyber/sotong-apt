@@ -398,7 +398,35 @@ const GATE = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta n
 <style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0f172a;color:#eef1f5;font-family:Pretendard,-apple-system,"Malgun Gothic",sans-serif}form{width:min(360px,90vw);background:#141c30;border:1px solid rgba(199,204,212,.18);border-radius:14px;padding:32px 28px;box-sizing:border-box}h1{font-size:18px;margin:0 0 6px}p{margin:0 0 18px;font-size:14px;color:#c7ccd4;line-height:1.6}input{width:100%;box-sizing:border-box;font-size:16px;padding:12px 14px;border-radius:8px;border:1px solid rgba(199,204,212,.3);background:#0f172a;color:#fff;margin-top:8px}button{width:100%;margin-top:12px;padding:12px;font-size:15px;font-weight:700;border:0;border-radius:8px;background:#eef1f5;color:#0f172a;cursor:pointer}.err{color:#f6b4b4;font-size:13px;min-height:18px;margin:8px 0 0}a{color:#c7ccd4;font-size:13px}</style></head>
 <body><form method="post">{{form}}<button type="submit">들어가기</button><p class="err">{{msg}}</p><a href="/">홈으로</a></form></body></html>`;
 const FORM_GEUL = `<h1>업무 도구 · 글해줌 로그인</h1><p>글해줌 구독 계정으로 들어갑니다. 한 번 들어오면 30일 동안 유지됩니다.</p><input type="email" name="email" autofocus autocomplete="username" placeholder="글해줌 이메일"><input type="password" name="pw" autocomplete="current-password" placeholder="비밀번호"><p style="margin:2px 0 12px;font-size:13px">비밀번호는 글해줌과 같습니다. <a href="https://geulhaejum.kr/forgot-password" target="_blank" rel="noopener" style="color:#93c5fd;white-space:nowrap">비밀번호를 잊으셨나요?</a></p>`;
-const FORM_PW = `<h1>업무 도구</h1><p>설계사 전용 공간입니다. 비밀번호를 넣어 주세요. 한 번 들어오면 30일 동안 유지됩니다.</p><input type="password" name="pw" autofocus autocomplete="current-password" placeholder="비밀번호">`;
+const FORM_PW = `<h1>업무 도구</h1><p>이 홈페이지 주인 전용 공간입니다. 비밀번호를 넣어 주세요. 한 번 들어오면 30일 동안 유지됩니다.</p><input type="password" name="pw" autofocus autocomplete="current-password" placeholder="비밀번호">`;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+// 견본처럼 비밀번호 문인 곳에서 무료 체험판으로 보내는 한 줄 — Pages 변수 TOOLS_TRIAL_URL 이 있는 사이트만(고객 사이트엔 안 넣는다, 11/20)
+const trialLink = env => env.TOOLS_TRIAL_URL ? `<p style="margin:12px 0 0"><a href="${esc(env.TOOLS_TRIAL_URL)}" style="color:#fde68a;font-weight:700;font-size:14px">비밀번호가 없으신가요? 무료로 체험해 보기 →</a></p>` : '';
+
+// 무료 체험 문(11/20 대표님 "이름·전화·동의만 받고 2번까지"): 폼은 신청 서버(car-track /trial)로 바로 간다 — 그래야 서버가 진짜 손님 IP 로
+// 도배를 막는다. 서버가 보관·텔레그램·노션 뒤 10분짜리 입장표(t)를 붙여 /tools/enter 로 돌려보내면 여기서 확인하고 7일 쿠키.
+// Pages 비밀값 TOOLS_TRIAL_SECRET = car-track 비밀값 TRIAL_SECRET (같은 값). 체험판 표시·2건 제한은 trial.js(build.py 가 tools_trial 세대에만 붙임).
+const TRIAL_MSG = { form: '성함·휴대폰 번호·동의를 확인해 주세요.', many: '잠시 뒤 다시 시도해 주세요.', expired: '입장표가 지났습니다. 다시 한 번 눌러 주세요.' };
+async function hmac(key, msg) {
+  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return [...new Uint8Array(await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(msg)))].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+function trialGate(env, url, msg) {
+  const track = (env.TRIAL_TRACK_URL || 'https://car-track.choikiho20.workers.dev').replace(/\/$/, '');
+  const hid = [['site', url.host], ...['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].map(k => [k, url.searchParams.get(k) || ''])]
+    .map(([k, v]) => `<input type="hidden" name="${k}" value="${esc(v.slice(0, 100))}">`).join('');
+  const form = `<style>.ck{display:flex;gap:8px;align-items:flex-start;margin:12px 0 0;font-size:13px;color:#c7ccd4;line-height:1.5}.ck input{width:auto;margin:3px 0 0}</style>`
+    + `<h1>업무 도구 무료 체험</h1><p>기업 보고서 PDF를 <b>2건까지</b> 직접 넣어 보실 수 있습니다. 넣은 보고서는 이 기기 안에서만 처리되고 서버로 가지 않습니다.</p>`
+    + `<input name="name" required maxlength="20" autocomplete="name" placeholder="성함"><input name="phone" type="tel" required inputmode="tel" maxlength="20" autocomplete="tel" placeholder="휴대폰 번호">`
+    + `<label class="ck"><input type="checkbox" name="consent" required><span>개인정보 수집·이용 동의(필수) — 성함·휴대폰 번호를 체험 확인과 상담 전화에만 쓰고 90일 뒤 지웁니다. <a href="https://sotong-corp.pages.dev/privacy" target="_blank" rel="noopener">자세히</a></span></label>`
+    + `<input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">${hid}`
+    + `<p style="margin:12px 0 0;font-size:13px">저장한 PPT에는 장마다 「체험판」 표시가 들어가 실제 고객 미팅에는 쓸 수 없습니다.</p>`;
+  const page = GATE.replace('<form method="post">', () => `<form method="post" action="${track}/trial">`).replace('{{form}}', () => form)
+    .replace('{{msg}}', () => esc(msg)).replace('>들어가기<', '>무료 체험 시작<');
+  return new Response(page, { status: 401, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', ...GATE_SEC,
+    // form-action 은 서버가 돌려보내는 길(303 → 이 사이트 /tools/enter)에도 적용된다 — 'self' 가 없으면 크롬이 되돌아오는 길을 막는다(11/20 실물 시험)
+    'Content-Security-Policy': `default-src 'none'; style-src 'unsafe-inline'; form-action 'self' ${new URL(track).origin}; base-uri 'none'; frame-ancestors 'none'` } });
+}
 
 async function sha(s) {
   const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
@@ -451,18 +479,31 @@ export default {
     if (HOME && /^[^.]+\.pages\.dev$/.test(url.hostname)) { url.hostname = HOME; return Response.redirect(url.toString(), 301); }
     if (!url.pathname.startsWith('/tools')) return env.ASSETS.fetch(request);
     const ip = request.headers.get('CF-Connecting-IP') || 'local';
+    if (env.TOOLS_TRIAL_SECRET) {                       // 무료 체험 세대(위 trialGate 주석). 정식·견본 세대엔 이 비밀값이 없다.
+      const tok = await sha('corp-trial-v1:' + env.TOOLS_TRIAL_SECRET + ':' + url.host);
+      if (url.pathname === '/tools/enter') {
+        const [exp, sig] = String(url.searchParams.get('t') || '').split('.');
+        if (+exp > Date.now() && sig && sig === await hmac(env.TOOLS_TRIAL_SECRET, url.host + '|' + exp))
+          return new Response(null, { status: 303, headers: { 'Location': '/tools/corp/',
+            'Set-Cookie': `tools_auth=${tok}; Path=/tools; Max-Age=604800; HttpOnly; Secure; SameSite=Lax` } });
+        return trialGate(env, url, TRIAL_MSG.expired);
+      }
+      const c = (request.headers.get('Cookie') || '').match(/(?:^|;\s*)tools_auth=([a-f0-9]+)(?:;|$)/);
+      return c && c[1] === tok ? env.ASSETS.fetch(request) : trialGate(env, url, TRIAL_MSG[url.searchParams.get('e')] || '');
+    }
     if (env.TOOLS_PASSWORD) {                           // 단순 비밀번호 문(견본·시연). 팔 때는 이 변수를 지운다.
       const tok = await sha('corp-tools-v1:' + env.TOOLS_PASSWORD);
+      const FORM_PW_T = FORM_PW + trialLink(env);
       if (request.method === 'POST') {
-        if (blocked(ip)) return gate(TOO_MANY, 429, FORM_PW);
+        if (blocked(ip)) return gate(TOO_MANY, 429, FORM_PW_T);
         const form = await request.formData();
-        if (String(form.get('pw') || '') !== env.TOOLS_PASSWORD) { failed(ip); return gate('비밀번호가 틀렸습니다.', 401, FORM_PW); }
+        if (String(form.get('pw') || '') !== env.TOOLS_PASSWORD) { failed(ip); return gate('비밀번호가 틀렸습니다.', 401, FORM_PW_T); }
         return new Response(null, { status: 303, headers: {
           'Location': url.pathname.endsWith('/') || url.pathname.endsWith('.html') ? url.pathname : '/tools/',
           'Set-Cookie': `tools_auth=${tok}; Path=/tools; Max-Age=2592000; HttpOnly; Secure; SameSite=Lax` } });
       }
       const c = (request.headers.get('Cookie') || '').match(/(?:^|;\s*)tools_auth=([a-f0-9]+)(?:;|$)/);
-      return c && c[1] === tok ? env.ASSETS.fetch(request) : gate('', 401, FORM_PW);
+      return c && c[1] === tok ? env.ASSETS.fetch(request) : gate('', 401, FORM_PW_T);
     }
     if (request.method === 'POST') {
       if (blocked(ip)) return gate(TOO_MANY, 429);
@@ -1032,6 +1073,15 @@ def main():
     # 고객에게 요청할 준비물 안내 (배포물이 아니므로 dist/가 아닌 작업 폴더에 둔다)
     todo, todo_n = client_todo(cfg, ROOT, len(full_pages))
     (ROOT / "고객에게_보낼_안내.txt").write_text(todo, encoding="utf-8")
+    if cfg.get("tools_trial"):   # 무료 체험 세대(11/20): 도구 모든 쪽에 체험판 띠·워터마크·보고서 2건 제한(engine/corp/trial.js)
+        shutil.copy(ENGINE / "trial.js", DIST / "tools" / "trial.js")
+        n_trial = 0
+        for p in (DIST / "tools").rglob("*.html"):
+            h = p.read_text(encoding="utf-8")
+            if "/tools/trial.js" not in h:
+                p.write_text(h.replace("</head>", '<script src="/tools/trial.js"></script></head>', 1), encoding="utf-8")
+                n_trial += 1
+        print(f"무료 체험판: 도구 {n_trial}쪽에 체험판 표시·2건 제한")
     n_js, n_on = write_sec_headers(cfg)   # dist 를 다 지은 뒤 마지막에 — 페이지 안 코드 지문을 떠야 하므로
     print(f"보안 머리글: dist/_headers (페이지 안 스크립트 {n_js}개·인라인 이벤트 {n_on}개 지문 허용)")
 

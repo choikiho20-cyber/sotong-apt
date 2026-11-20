@@ -88,3 +88,31 @@ else assert.equal(await r.text(), 'ASSET');
 r = await worker.fetch(new Request('https://ab12cd34.proj.pages.dev/posts/a'), env);
 assert.equal(await r.text(), 'ASSET');
 console.log('A~K 통과' + (home ? ` (정식 주소 ${home})` : ' (임시 주소 세대 — 넘김 없음)'));
+// L 무료 체험 문(11/20): 쿠키 없으면 이름·전화·동의 폼 — 신청 서버(/trial)로 바로 보내고, 사이트·UTM 숨은 칸, CSP form-action 은 그 서버만
+{ const envT = { ...env, TOOLS_TRIAL_SECRET: 's3cret', TRIAL_TRACK_URL: 'https://track.test' };
+  r = await worker.fetch(req('/tools/?utm_source=meta&utm_content=%22%3E%3Cb%3E'), envT);
+  assert.equal(r.status, 401); const h = await r.text();
+  assert.match(h, /action="https:\/\/track\.test\/trial"/); assert.match(h, /name="site" value="site\.test"/);
+  assert.match(h, /name="utm_content" value="&quot;&gt;&lt;b&gt;"/);          // 주소 꼬리표는 글자로만(태그 끼워넣기 막힘)
+  assert.match(h, /name="consent" required/); assert.match(h, /무료 체험 시작/); assert.doesNotMatch(h, /설계사/);
+  assert.match(r.headers.get('Content-Security-Policy'), /form-action 'self' https:\/\/track\.test;/);   // 'self' = 서버가 돌려보내는 길(빠지면 크롬이 막음)
+  // 입장표: 서버와 같은 서명이면 7일 쿠키 → 도구, 지난 표·위조 표·다른 사이트 표는 다시 문
+  const hm = async (k, m) => { const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(k), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    return [...new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(m)))].map(x => x.toString(16).padStart(2, '0')).join(''); };
+  const exp = Date.now() + 60000;
+  r = await worker.fetch(req(`/tools/enter?t=${exp}.${await hm('s3cret', 'site.test|' + exp)}`), envT);
+  assert.equal(r.status, 303); assert.equal(r.headers.get('Location'), '/tools/corp/');
+  const tj = r.headers.get('Set-Cookie'); assert.match(tj, /Max-Age=604800; HttpOnly; Secure/);
+  r = await worker.fetch(req('/tools/corp/', { headers: { Cookie: tj.split(';')[0] } }), envT); assert.equal(await r.text(), 'ASSET');
+  const old = Date.now() - 1;
+  r = await worker.fetch(req(`/tools/enter?t=${old}.${await hm('s3cret', 'site.test|' + old)}`), envT); assert.equal(r.status, 401); assert.match(await r.text(), /입장표가 지났습니다/);
+  r = await worker.fetch(req(`/tools/enter?t=${exp}.${await hm('other', 'site.test|' + exp)}`), envT); assert.equal(r.status, 401);
+  r = await worker.fetch(req(`/tools/enter?t=${exp}.${await hm('s3cret', 'evil.test|' + exp)}`), envT); assert.equal(r.status, 401);
+  r = await worker.fetch(req('/tools/corp/', { headers: { Cookie: jar } }), envT); assert.equal(r.status, 401);   // 구독 쿠키로 체험 세대 못 들어감
+  r = await worker.fetch(req('/tools/?e=many'), envT); assert.match(await r.text(), /잠시 뒤 다시/); }
+// M 비밀번호 문: '설계사' 문구 없음, 체험 링크는 TOOLS_TRIAL_URL 이 있는 사이트(견본)만
+{ r = await worker.fetch(req('/tools/'), { ...env, TOOLS_PASSWORD: 'longpass1234' }); let h = await r.text();
+  assert.doesNotMatch(h, /설계사/); assert.doesNotMatch(h, /무료로 체험/);
+  r = await worker.fetch(req('/tools/'), { ...env, TOOLS_PASSWORD: 'longpass1234', TOOLS_TRIAL_URL: 'https://trial.test/tools/' }); h = await r.text();
+  assert.match(h, /href="https:\/\/trial\.test\/tools\/"[^>]*>비밀번호가 없으신가요\? 무료로 체험해 보기/); }
+console.log('L~M 통과 (무료 체험 문·견본 체험 링크)');
