@@ -92,7 +92,13 @@ def run_inbox():
     results = []
     for f in files:
         try:
-            results.append((f.name, *add(json.loads(f.read_text(encoding="utf-8")))))
+            d = json.loads(f.read_text(encoding="utf-8"))
+            results.append((f.name, *add(d)))
+            # 사진 칸은 아파트 공용 형식(11/20)에 있지만 법인 1판은 쓰지 않는다 — 같이 온 사진은 inbox 안 것만 치운다
+            for img in d.get("images") or []:
+                p = (ROOT / str(img)).resolve()
+                if p.is_relative_to((ROOT / "inbox").resolve()) and p.is_file():
+                    p.unlink()
         except (ValueError, AttributeError) as e:
             results.append((f.name, "거절", f"글 파일을 읽지 못함: {e}"))
         f.unlink()

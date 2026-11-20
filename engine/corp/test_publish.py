@@ -39,11 +39,12 @@ body = ("법인세법 시행령 제44조 제4항은 임원 퇴직금을 손금�
 (ws / "inbox").mkdir()
 (ws / "inbox/a.json").write_text(json.dumps({"title": "임원 퇴직금 한도는 정관에서 시작합니다: 시행령 제44조 정리",
     "content": f"## 정관 규정이 먼저입니다\n\n{body} <script>alert(1)</script>\n\n## 규정이 없으면\n\n{body}\n\n해시태그: #법인 #퇴직금",
-    "keywords": ["임원 퇴직금", "정관<b>"]}, ensure_ascii=False), encoding="utf-8")
+    "keywords": ["임원 퇴직금", "정관<b>"], "images": ["inbox/a-1.jpg", "../config.json"]}, ensure_ascii=False), encoding="utf-8")
 (ws / "inbox/b.json").write_text(json.dumps({"title": "가지급금 정리", "content": f"{body}\n\n저희가 절세 컨설팅을 해 드립니다."},
                                             ensure_ascii=False), encoding="utf-8")
 (ws / "inbox/c.json").write_text(json.dumps({"title": "짧은 글", "content": "짧다"}, ensure_ascii=False), encoding="utf-8")
 (ws / "inbox/d.json").write_text("{깨진", encoding="utf-8")
+(ws / "inbox/a-1.jpg").write_bytes(b"jpg")   # 아파트 공용 형식의 사진 칸 — 법인은 치우기만
 git(ws, "add", "-A"); git(ws, "commit", "-m", "글해줌 inbox"); git(ws, "push")
 
 r = sh(ws, sys.executable, "-I", "-X", "utf8", "_engine/engine/corp/publish.py", "--inbox", "--unit", ".")
@@ -56,6 +57,7 @@ t = post.read_text(encoding="utf-8")
 assert "해시태그" not in t and t.startswith("---\ntitle: 임원 퇴직금 한도는 정관에서 시작합니다: 시행령 제44조 정리\n"), t[:200]
 assert len(list((ws / "_보류").glob("*.md"))) == 1 and len(list((ws / "_보류").glob("*.점검.txt"))) == 1, "위반 글은 _보류"
 assert not list((ws / "inbox").glob("*.json")), "inbox 비워짐"
+assert not (ws / "inbox/a-1.jpg").exists() and (ws / "config.json").exists(), "같이 온 사진은 치우고, inbox 밖 경로는 안 건드림"
 remote = sh(T, "git", "-c", "core.quotePath=false", "--git-dir", "remote.git", "ls-tree", "-r", "main", "--name-only").stdout
 assert f"content/{today}-1.md" in remote and f"_보류/{today}-2.md" in remote and "inbox/a.json" not in remote, remote[-500:]
 print("A 통과 — inbox 4편: 발행 1·보류 1·거절 2, 원격 저장소에 되올림, 실패 코드 1")
