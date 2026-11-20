@@ -154,6 +154,7 @@ name: build
 on:
   push:
     branches: [main]
+    paths-ignore: ["inbox/*.jpg", "inbox/*.jpeg", "inbox/*.png", "inbox/*.webp"]   # 글해줌은 사진을 먼저 한 장씩, json 을 마지막에 올린다 — json 커밋에서 한 번만 돈다
   workflow_dispatch:
 permissions:
   contents: write
