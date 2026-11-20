@@ -295,7 +295,7 @@ def open_unit(name, given=None, domain=""):
 
     print("[6/7] 문의 서버 등록")
     track_site.register(cfg["site_url"], {"repo": repo, "name": cfg["name"]})
-    app_add(repo, u)
+    app_add(repo)
 
     print("[7/7] 올리기 — 저장소에 올리면 Actions 가 짓고 Cloudflare 로 (2~4분)")
     sh(["git", "add", "-A"], u)
@@ -312,20 +312,17 @@ def open_unit(name, given=None, domain=""):
  · 텔레그램 연결은 넘겨드리는 날 고객 폰으로 (tg_link.py)""")
 
 
-def app_add(repo, cwd):
-    """글해줌 GitHub 앱이 이 저장소에 글을 넣을 수 있게 설치 목록에 더한다(앱이 아직 없으면 건너뜀 — github_app.py)."""
+def app_add(repo):
+    """글해줌 GitHub 앱 설치 목록에 이 저장소를 더하는 것은 대표님 클릭 한 번(설치 화면에서 저장소 체크 → Save).
+    ponytail: GitHub 은 설치 목록 API 에 '앱 사용자 토큰'을 요구한다(gh 로그인 토큰은 403, 11/20 실측).
+    고객이 수십 곳을 넘으면 앱의 device flow 로 사용자 토큰을 받아 자동화한다."""
     app = KEYS / "github_app.json"
     if not app.exists():
         print("  글해줌 GitHub 앱 없음 — 건너뜀 (만들기: python -X utf8 engine/github_app.py)")
         return
     slug = json.loads(app.read_text(encoding="utf-8"))["slug"]
-    iid = sh(["gh", "api", "/user/installations", "--jq", f'.installations[] | select(.app_slug=="{slug}") | .id'], cwd).strip()
-    rid = sh(["gh", "api", f"repos/{repo}", "--jq", ".id"], cwd).strip()
-    if not iid:
-        print(f"  앱 {slug} 이 아직 설치 안 됨 — https://github.com/apps/{slug}/installations/new 에서 '선택한 저장소'로 설치")
-        return
-    sh(["gh", "api", "-X", "PUT", f"/user/installations/{iid}/repositories/{rid}"], cwd)
-    print(f"  글해줌 앱 {slug} 에 {repo} 추가")
+    print(f"  ★ 대표님 클릭 1번: https://github.com/apps/{slug}/installations/new → "
+          f"'Only select repositories' 에 {repo.split('/')[-1]} 체크 → Install/Save (글해줌이 이 홈페이지에 글을 넣을 수 있게)")
 
 
 if __name__ == "__main__":

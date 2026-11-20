@@ -5,7 +5,7 @@
 '만들기·1년마다 갈기'가 끝나지 않는다. 앱 하나면 서버가 필요할 때 1시간짜리 열쇠를 스스로 받는다(만료 관리 없음).
 권한은 '글 넣기(Contents 쓰기)' 하나. 설치는 '선택한 저장소'만 — 엔진(sotong-apt)·도구(corp-tool)는 넣지 않는다.
 서버가 털려도 고객 글 저장소까지만이고, 모든 고객 빌드가 받아 가는 엔진은 못 건드린다.
-새 고객 저장소는 deploy.py open 이 설치 목록에 자동으로 더한다(app_add).
+새 고객 저장소는 설치 화면에서 대표님이 체크 한 번(deploy.py open 이 링크를 띄움 — 설치 목록 API 는 앱 사용자 토큰만 받아서, 11/20 실측).
 
 흐름: 이 PC에 잠깐 창구(localhost:8765)를 연다 → 브라우저가 GitHub '앱 만들기' 화면으로 → 대표님 [Create] 한 번
 → GitHub 가 돌려준 일회용 코드로 앱 열쇠(pem)를 받아 ~/.sotong/ 에 저장(화면에 안 찍음) → 설치 화면 주소 안내.
@@ -48,7 +48,7 @@ class Desk(http.server.BaseHTTPRequestHandler):
         self.reply(f"<p>앱 <b>{html.escape(app['slug'])}</b> 를 만들었습니다. 이 창을 닫고 터미널 안내를 따라 주세요.</p>")
         print(f"\n앱 만들기 끝: {app['slug']} (번호 {app['id']}) — 열쇠 {KEYS / 'github_app.pem'} (값은 화면에 안 찍음)\n"
               f"다음 한 번: https://github.com/apps/{app['slug']}/installations/new\n"
-              "  → 'Only select repositories' → 고객 저장소 하나 고르고 Install (이후 고객은 deploy.py open 이 자동으로 더함)\n"
+              "  → 'Only select repositories' → 고객 저장소 하나 고르고 Install (이후 고객도 deploy.py open 이 띄우는 같은 링크에서 체크 한 번)\n"
               "  → 글해줌 서버 .env 에 GITHUB_APP_ID·GITHUB_APP_KEY 를 넣는 것은 글해줌 창 몫")
         self.server.done = True
 
