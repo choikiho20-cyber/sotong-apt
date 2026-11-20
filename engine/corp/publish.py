@@ -10,8 +10,9 @@ inbox/<번호>.json (글해줌 ↔ 엔진 약속, 번호는 겹치지 않게 시
   {"title": "제목", "content": "마크다운 본문(## 소제목)", "summary": "검색 결과 두 줄(없으면 첫 문단)", "keywords": ["..."]}
   사진은 1판에서 받지 않는다 — 법인 글은 조문 정리 글이라 글자만(견본 7편도 그렇다).
 
-  python publish.py --inbox            inbox 전부 처리 (Actions). 보류·거절이 있으면 끝에 1 로 끝나 대표님께 실패 메일이 간다
-  python publish.py --json 글.json     한 편만 넣어 보기 (올리지 않음)
+  python -I engine/corp/publish.py --inbox --unit <세대>     inbox 전부 처리 (Actions). 보류·거절이 있으면 1 로 끝나 대표님께 실패 메일
+  python engine/corp/publish.py --json 글.json --unit <세대>  한 편만 넣어 보기 (올리지 않음)
+  세대 폴더에 연결 파일을 두지 않는다 — 세대 저장소 파일은 고객·글해줌이 쓸 수 있어 Actions 에서 실행하면 비밀값이 샌다.
 """
 import argparse
 import json
@@ -48,8 +49,10 @@ def clean(text):
 
 def add(d):
     """글 한 편 → content/<날짜>-<n>.md. 심의 자동점검에 걸리면 _보류/ 로 빼고 점검표를 옆에 둔다. (상태, 이름) 반환."""
-    one = lambda s: re.sub(r"\s+", " ", str(s or "")).strip()   # 머리말은 한 줄이어야 parse_post 가 읽는다
-    title, body = one(d.get("title")), clean(d.get("content"))
+    # 머리말은 한 줄이어야 parse_post 가 읽는다. 엔진 마크다운 변환은 HTML 을 그대로 통과시키고 보안 머리글은 페이지 안 스크립트 지문을
+    # 허용하므로, 밖에서 온 글의 '<' 는 글자로 바꿔 태그가 못 들어오게 한다(11/20 보안 검토). '>' 는 인용(>)이라 둔다.
+    one = lambda s: re.sub(r"\s+", " ", str(s or "")).replace("<", "").replace(">", "").strip()
+    title, body = one(d.get("title")), clean(d.get("content")).replace("<", "&lt;")
     if not title or len(re.sub(r"[#>|*\-\s]", "", body)) < 100:
         return "거절", "제목이 없거나 본문이 100자 미만"   # 빈 페이지가 검색에 남으면 손해, 성공으로 적히면 아무도 모른다
     summary = one(d.get("summary")) or one(re.sub(r"[#>|*\-]", " ", body))[:150]

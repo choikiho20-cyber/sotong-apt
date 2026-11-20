@@ -101,6 +101,13 @@ def run(cmd, cwd, inp=None):
     return r.returncode, (r.stdout or "") + (r.stderr or "")
 
 
+def build_cmd(u):
+    # 세대 폴더의 build.py 가 아니라 엔진을 직접 부른다. 세대 저장소 파일은 고객 관리 화면·글해줌 앱이 쓸 수 있으므로
+    # Actions 에서 비밀값 옆에 실행하면 열쇠를 빼 갈 수 있다(11/20 보안 검토). -I: 세대 폴더의 같은 이름 .py 가 끼어들지 못하게.
+    return [sys.executable, "-I", "-X", "utf8", "-c",
+            f"import sys; sys.path.insert(0, {str(ENGINE)!r}); import build; build.use_unit({str(u)!r}); build.main()"]
+
+
 def sh(cmd, cwd, inp=None):
     code, out = run(cmd, cwd, inp)
     if code:
@@ -135,15 +142,17 @@ jobs:
           repository: %(owner)s/corp-tool
           path: 법인도구
           ssh-key: ${{ secrets.CORP_TOOL_KEY }}
+          persist-credentials: false   # 받자마자 열쇠를 지운다
           sparse-checkout: web
           filter: blob:none
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      # 여기부터 엔진 코드만 돈다 — 이 저장소의 build.py 등은 실행하지 않는다(고객·글해줌이 쓸 수 있는 파일이라)
       - id: inbox
         continue-on-error: true
-        run: python -X utf8 publish.py --inbox
-      - run: python -X utf8 _engine/engine/corp/deploy.py .
+        run: python -I -X utf8 _engine/engine/corp/publish.py --inbox --unit .
+      - run: python -I -X utf8 _engine/engine/corp/deploy.py .
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -213,14 +222,13 @@ def open_unit(name, given=None, domain=""):
     (u / "config.json").write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     print("[1/7] 연결 파일·자동 빌드")
-    for f in ("build.py", "publish.py"):
-        shutil.copy2(ENGINE / "unit_files" / f, u / f)
+    shutil.copy2(ENGINE / "unit_files" / "build.py", u / "build.py")   # 이 PC에서 손으로 지을 때용(Actions 는 엔진을 직접 부름)
     (u / ".gitignore").write_text(GITIGNORE, encoding="utf-8")
     (u / ".github" / "workflows").mkdir(parents=True, exist_ok=True)
     (u / ".github" / "workflows" / "build.yml").write_text(WORKFLOW, encoding="utf-8")
 
     print("[2/7] 이 PC에서 지어 보기 (심의 자동점검·도구 문 검사)")
-    code, out = run([sys.executable, "-X", "utf8", "build.py"], u)
+    code, out = run(build_cmd(u), u)
     if code or "위반 있음" in out:
         sys.exit(f"{name}: 빌드 실패 또는 심의 점검 위반 — 고치고 다시\n{out[-600:]}")
     sh(["node", str(ENGINE / "test_tools_gate.mjs")], u)
@@ -302,14 +310,21 @@ if __name__ == "__main__":
             code, out = run(["gh", "workflow", "run", "build", "-R", cfg["admin_repo"]], u)
             print("    저장소에 다시 짓기 요청:", "됨" if not code else out[-300:])
             continue
-        code, out = run([sys.executable, "-X", "utf8", "build.py"], u)
+        if os.environ.get("GITHUB_ACTIONS"):
+            # Cloudflare 열쇠는 계정 전체용이다(Pages 는 프로젝트 하나로 좁힌 열쇠가 없다). 올릴 곳은 고객이 못 바꾸는 저장소 이름으로 고정한다.
+            pinned = os.environ.get("GITHUB_REPOSITORY", "").split("/")[-1]
+            if project != pinned:
+                sys.exit(f"config 의 pages_project({project})가 저장소 이름({pinned})과 다릅니다 — 남의 사이트에 올리지 않습니다")
+        code, out = run(build_cmd(u), u)
         print("   ", " / ".join(l for l in out.splitlines() if l.startswith(("빌드 완료", "도구 코드"))) or out[-400:])
         if code or "위반 있음" in out:
             sys.exit(f"{u.name}: 빌드 실패 또는 심의 점검 위반 — 올리지 않습니다")
         code, out = run(["node", str(ENGINE / "test_tools_gate.mjs")], u)
         if code:
             sys.exit(f"{u.name}: 도구 문 자체검사 실패 — 올리지 않습니다\n{out[-600:]}")
-        code, out = run(["npx", "--yes", "wrangler", "pages", "deploy", "dist", f"--project-name={project}", "--commit-dirty=true"], u)
+        # wrangler 는 세대 폴더 밖에서 — npx 는 위로 올라가며 node_modules 를 찾으므로 저장소에 심은 가짜 wrangler 가 돌 수 있다
+        code, out = run(["npx", "--yes", "wrangler", "pages", "deploy", str(u / "dist"), f"--project-name={project}",
+                         "--branch=main", "--commit-dirty=true"], os.environ.get("RUNNER_TEMP") or ENGINE)
         print("   ", (out.strip().splitlines() or ["(출력 없음)"])[-1])
         if code:
             sys.exit(f"{u.name}: 올리기 실패\n{out[-600:]}")
