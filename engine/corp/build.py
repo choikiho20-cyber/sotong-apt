@@ -641,9 +641,10 @@ def copy_indexnow_key():
 # PDF 읽기(pdf.js)·압축(jszip)=cdnjs, PPT(pptxgenjs)·글자 인식(tesseract)·영상(mediabunny)=jsdelivr,
 # 글자 인식 언어 자료=tessdata.projectnaptha.com, 음성=Google TTS, 법령 감시=geulhaejum.kr. 새 바깥 자원을 붙이면 여기에 그 주소만 더한다.
 SEC_SCRIPT = ("https://cdn.jsdelivr.net/npm/ https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/ "
-              "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/")
+              "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/ "
+              "https://static.cloudflareinsights.com/")   # Pages 방문 통계(Web Analytics)가 페이지에 끼워 넣는 beacon — 막히면 콘솔 오류·통계 0(문진 11/20)
 SEC_CONNECT = ("https://geulhaejum.kr https://texttospeech.googleapis.com https://cdn.jsdelivr.net "
-               "https://cdnjs.cloudflare.com https://tessdata.projectnaptha.com")
+               "https://cdnjs.cloudflare.com https://tessdata.projectnaptha.com https://cloudflareinsights.com")
 
 
 def write_sec_headers(cfg):
