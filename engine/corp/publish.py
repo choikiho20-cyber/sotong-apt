@@ -30,7 +30,8 @@ import build  # noqa: E402
 ROOT = None   # 글을 넣을 세대 폴더 (use_unit 이 정한다)
 # 글 속 링크로 허용하는 주소: http(s) 또는 콜론·따옴표·공백 없는 상대 주소(기존 글의 jeonggwan.html 같은 것).
 # 엔진 inline() 은 href 를 따옴표 안에 그대로 넣으므로 '"' 하나로 속성을 깨고 on…= 를 심을 수 있다(11/20 보안 검토). deploy.check_unit 도 이걸 쓴다.
-SAFE_HREF = re.compile(r"https?://[^\s\"'<>()]+|[\w./#?=&%-]+")
+# 상대 주소엔 '&'·'%' 를 빼 둔다 — 브라우저가 &#106avascript&#58… 를 javascript: 로 풀어 읽는다(11/20 보안 검토 3차).
+SAFE_HREF = re.compile(r"https?://[^\s\"'<>()]+|[\w./#?=-]+")
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 

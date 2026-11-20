@@ -106,8 +106,15 @@ evil.write_text('---\ntitle: x\n---\n\n<img src=x onerror=alert(1)>\n', encoding
 evil.unlink()
 cfg["og_image"] = "../../../../proc/self/environ"
 (ws / "config.json").write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8"); refused("og_image 밖 경로")
-cfg.pop("og_image")
+# 3차: 세대 폴더 '안'이지만 받아 온 비공개 도구 원본·.git 을 가리키는 경로, 설정 주소 칸의 javascript:, 문자 참조로 숨긴 javascript:
+cfg["og_image"] = "법인도구/web/app.js"
+(ws / "config.json").write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8"); refused("og_image 도구 원본")
+cfg.pop("og_image"); cfg["kakao_url"] = "javascript:alert(1)"
+(ws / "config.json").write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8"); refused("설정 주소 javascript:")
+cfg["kakao_url"] = ""
 (ws / "config.json").write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+evil.write_text("---\ntitle: x\n---\n\n[누르세요](&#106avascript&#58location=x)\n", encoding="utf-8"); refused("문자 참조 javascript:")
+evil.unlink()
 try:
     os.symlink(str(S / "법인도구" / "leak_trace.py"), ws / "assets" / "x.txt"); refused("바로가기")
     (ws / "assets" / "x.txt").unlink(); link = "바로가기·"
@@ -122,5 +129,5 @@ r = sh(ws, sys.executable, "-I", "-X", "utf8", "_engine/engine/corp/deploy.py", 
 assert r.returncode == 0, r.stdout[-400:] + r.stderr[-300:]
 page = (ws / "dist" / "posts" / f"{today}-3.html").read_text(encoding="utf-8")
 assert "javascript:" not in page and "클릭" in page and 'href="https://law.go.kr/법령/상법"' in page and '"따옴표"' not in page
-print(f"F 통과 — 링크 속성 깨기·머리말 따옴표·태그·og_image 밖 경로·{link}거부, inbox 의 javascript: 링크는 글자로")
+print(f"F 통과 — 링크 속성 깨기·머리말 따옴표·태그·og_image 밖 경로·도구 원본 경로·설정 주소 javascript:·문자 참조 우회·{link}거부, inbox 의 javascript: 링크는 글자로")
 shutil.rmtree(T, ignore_errors=True)

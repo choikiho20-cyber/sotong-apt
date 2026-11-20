@@ -124,10 +124,14 @@ def check_unit(u):
             [walk(x, k) for x in v]
         elif isinstance(v, str) and not k.endswith("_note") and re.search(r"[\"<>]", v):
             bad.append(f"config {k}: 따옴표·꺾쇠")
+        elif (isinstance(v, str) and v and k.endswith(("url", "_image", "_video", "_cutout"))
+              and not (SAFE_HREF.fullmatch(v) or re.fullmatch(r"(tel|mailto):[\w@.+-]+", v))):
+            bad.append(f"config {k}: 주소는 http(s)·상대 주소·tel·mailto 만")   # javascript: 등이 href·src 로 들어가지 않게
     walk(cfg, "")
+    # 빌드 중 세대 폴더엔 비공개 도구 원본(법인도구/web)과 .git 도 있다 — 카톡 카드는 assets/ 안 사진 파일만
     og = (u / (cfg.get("og_image") or "assets/og-card.jpg")).resolve()
-    if not og.is_relative_to(u.resolve()):
-        bad.append("config og_image 가 세대 폴더 밖을 가리킴")
+    if not og.is_relative_to((u / "assets").resolve()) or og.suffix.lower() not in (".jpg", ".jpeg", ".png", ".webp"):
+        bad.append("config og_image 는 assets/ 안 사진(jpg·png·webp)만")
     for md in sorted((u / "content").glob("*.md")):
         t = md.read_text(encoding="utf-8")
         head = t.split("\n---", 1)[0] if t.startswith("---") else ""
@@ -166,6 +170,7 @@ jobs:
         with:
           repository: %(owner)s/sotong-apt
           path: _engine
+          persist-credentials: false
       - uses: actions/checkout@v4
         with:
           repository: %(owner)s/corp-tool
