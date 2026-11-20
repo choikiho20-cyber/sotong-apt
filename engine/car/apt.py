@@ -23,7 +23,8 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 ENGINE = Path(__file__).resolve().parent
 APT = ENGINE.parents[1]
 UNITS = APT / "units"
-TRACK = APT.parent / "car-track"
+sys.path.insert(0, str(ENGINE.parent))
+import track_site  # noqa: E402  (engine/track_site.py — 문의 서버 등록, 자동차·법인 공용)
 OWNER = "choikiho20-cyber"
 AUDIT = Path.home() / ".claude" / "skills" / "homepage-seo" / "audit.py"   # 홈페이지 검색 점검표(FAIL 0 이어야 납품)
 ENGINE_REPO = f"{OWNER}/sotong-apt"
@@ -205,13 +206,7 @@ def cmd_new(a):
     sh(["gh", "workflow", "run", "build", "-R", repo], u, check=False)
 
     print("[4/5] 문의·열람 서버 등록")
-    toml = (TRACK / "wrangler.toml").read_text(encoding="utf-8")
-    m = re.search(r"^SITES = '(.*)'$", toml, re.M)
-    sites = json.loads(m.group(1))
-    sites[re.sub(r"^https?://", "", site)] = {"repo": repo, "name": cfg.get("name", a.unit)}
-    toml = toml[:m.start(1)] + json.dumps(sites, ensure_ascii=False, separators=(",", ":")) + toml[m.end(1):]
-    (TRACK / "wrangler.toml").write_text(toml, encoding="utf-8")
-    sh(["npx", "--yes", "wrangler", "deploy"], TRACK)
+    track_site.register(site, {"repo": repo, "name": cfg.get("name", a.unit)})
 
     print(f"""[5/5] 완료 — 1~2분 뒤 {site}/
 
