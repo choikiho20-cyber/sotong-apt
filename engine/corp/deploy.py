@@ -30,7 +30,7 @@ TRACK_URL = "https://car-track.choikiho20.workers.dev"
 #   tools_api_key.txt(글해줌 로그인 문, login 때만) · github_app.json/.pem(글해줌 앱, engine/github_app.py 가 만듦)
 KEYS = Path.home() / ".sotong"
 WIN = sys.platform == "win32"
-sys.path.insert(0, str(ENGINE.parent))
+sys.path[:0] = [str(ENGINE), str(ENGINE.parent)]   # python -I(Actions)는 스크립트 폴더도 넣지 않는다
 import track_site  # noqa: E402  (engine/track_site.py — 문의 서버 등록, 자동차·법인 공용)
 # 견본의 문구(소개·상황·FAQ·글)는 물려받고, 사람에 붙은 값은 비운다.
 # 사진은 복사하지 않는다 — 앞 사람 얼굴이 따라오는 사고가 구조적으로 생길 수 없게(자동차 단지와 같은 규칙).
@@ -94,10 +94,10 @@ def ping_indexnow(u, site):
         return f"실패 {e} (사이트는 올라감)"
 
 
-def run(cmd, cwd, inp=None):
+def run(cmd, cwd, inp=None, env=None):
     # shell 은 Windows 의 npx(.cmd)에만 — 리눅스(Actions)에서 목록을 shell 로 넘기면 첫 낱말만 돈다
     r = subprocess.run(cmd, cwd=cwd, input=inp, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                       shell=WIN and cmd[0] == "npx")
+                       shell=WIN and cmd[0] == "npx", env=env)
     return r.returncode, (r.stdout or "") + (r.stderr or "")
 
 
@@ -106,6 +106,35 @@ def build_cmd(u):
     # Actions 에서 비밀값 옆에 실행하면 열쇠를 빼 갈 수 있다(11/20 보안 검토). -I: 세대 폴더의 같은 이름 .py 가 끼어들지 못하게.
     return [sys.executable, "-I", "-X", "utf8", "-c",
             f"import sys; sys.path.insert(0, {str(ENGINE)!r}); import build; build.use_unit({str(u)!r}); build.main()"]
+
+
+def check_unit(u):
+    """올리기 전 세대 데이터 검사 — 세대 저장소는 고객 관리 화면 열쇠·글해줌 앱이 쓸 수 있다(11/20 보안 검토).
+    엔진은 설정·글을 걸러내지 않고 화면에 찍고, 보안 머리글은 페이지 안 스크립트·on…= 지문을 허용하며, 사진·카드는 경로대로 복사한다.
+    그래서 데이터 칸이 코드나 비밀 파일로 번지는 길을 여기서 막는다. 문제 목록을 돌려준다(비면 통과). 기존 세대 6곳은 전부 통과."""
+    from publish import SAFE_HREF
+    bad = [f"바로가기(심볼릭 링크) {p.relative_to(u)}" for p in u.rglob("*")
+           if p.is_symlink() and p.relative_to(u).parts[0] not in ("_engine", "법인도구", ".git", "dist")]
+    cfg = json.loads((u / "config.json").read_text(encoding="utf-8"))
+
+    def walk(v, k):
+        if isinstance(v, dict):
+            [walk(x, kk) for kk, x in v.items()]
+        elif isinstance(v, list):
+            [walk(x, k) for x in v]
+        elif isinstance(v, str) and not k.endswith("_note") and re.search(r"[\"<>]", v):
+            bad.append(f"config {k}: 따옴표·꺾쇠")
+    walk(cfg, "")
+    og = (u / (cfg.get("og_image") or "assets/og-card.jpg")).resolve()
+    if not og.is_relative_to(u.resolve()):
+        bad.append("config og_image 가 세대 폴더 밖을 가리킴")
+    for md in sorted((u / "content").glob("*.md")):
+        t = md.read_text(encoding="utf-8")
+        head = t.split("\n---", 1)[0] if t.startswith("---") else ""
+        if "<" in t or '"' in head:
+            bad.append(f"content/{md.name}: 태그(<) 또는 머리말 따옴표")
+        bad += [f"content/{md.name}: 링크 {h[:40]}" for h in re.findall(r"\]\(([^)]*)\)", t) if not SAFE_HREF.fullmatch(h)]
+    return bad
 
 
 def sh(cmd, cwd, inp=None):
@@ -227,7 +256,9 @@ def open_unit(name, given=None, domain=""):
     (u / ".github" / "workflows").mkdir(parents=True, exist_ok=True)
     (u / ".github" / "workflows" / "build.yml").write_text(WORKFLOW, encoding="utf-8")
 
-    print("[2/7] 이 PC에서 지어 보기 (심의 자동점검·도구 문 검사)")
+    print("[2/7] 이 PC에서 지어 보기 (세대 데이터 검사·심의 자동점검·도구 문 검사)")
+    if check_unit(u):
+        sys.exit(f"{name}: 세대 데이터 검사에 걸림\n  " + "\n  ".join(check_unit(u)[:20]))
     code, out = run(build_cmd(u), u)
     if code or "위반 있음" in out:
         sys.exit(f"{name}: 빌드 실패 또는 심의 점검 위반 — 고치고 다시\n{out[-600:]}")
@@ -315,11 +346,15 @@ if __name__ == "__main__":
             pinned = os.environ.get("GITHUB_REPOSITORY", "").split("/")[-1]
             if project != pinned:
                 sys.exit(f"config 의 pages_project({project})가 저장소 이름({pinned})과 다릅니다 — 남의 사이트에 올리지 않습니다")
-        code, out = run(build_cmd(u), u)
+        bad = check_unit(u)
+        if bad:
+            sys.exit(f"{u.name}: 세대 데이터 검사에 걸려 올리지 않습니다\n  " + "\n  ".join(bad[:20]))
+        no_keys = {k: v for k, v in os.environ.items() if not k.startswith("CLOUDFLARE_")}   # 짓기·검사엔 열쇠를 안 준다 — wrangler 만
+        code, out = run(build_cmd(u), u, env=no_keys)
         print("   ", " / ".join(l for l in out.splitlines() if l.startswith(("빌드 완료", "도구 코드"))) or out[-400:])
         if code or "위반 있음" in out:
             sys.exit(f"{u.name}: 빌드 실패 또는 심의 점검 위반 — 올리지 않습니다")
-        code, out = run(["node", str(ENGINE / "test_tools_gate.mjs")], u)
+        code, out = run(["node", str(ENGINE / "test_tools_gate.mjs")], u, env=no_keys)
         if code:
             sys.exit(f"{u.name}: 도구 문 자체검사 실패 — 올리지 않습니다\n{out[-600:]}")
         # wrangler 는 세대 폴더 밖에서 — npx 는 위로 올라가며 node_modules 를 찾으므로 저장소에 심은 가짜 wrangler 가 돌 수 있다

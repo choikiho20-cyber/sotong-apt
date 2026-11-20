@@ -28,6 +28,9 @@ sys.path.insert(0, str(ENGINE))   # 'import build' 이 세대 폴더의 연결 �
 import build  # noqa: E402
 
 ROOT = None   # 글을 넣을 세대 폴더 (use_unit 이 정한다)
+# 글 속 링크로 허용하는 주소: http(s) 또는 콜론·따옴표·공백 없는 상대 주소(기존 글의 jeonggwan.html 같은 것).
+# 엔진 inline() 은 href 를 따옴표 안에 그대로 넣으므로 '"' 하나로 속성을 깨고 on…= 를 심을 수 있다(11/20 보안 검토). deploy.check_unit 도 이걸 쓴다.
+SAFE_HREF = re.compile(r"https?://[^\s\"'<>()]+|[\w./#?=&%-]+")
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 
@@ -51,8 +54,9 @@ def add(d):
     """글 한 편 → content/<날짜>-<n>.md. 심의 자동점검에 걸리면 _보류/ 로 빼고 점검표를 옆에 둔다. (상태, 이름) 반환."""
     # 머리말은 한 줄이어야 parse_post 가 읽는다. 엔진 마크다운 변환은 HTML 을 그대로 통과시키고 보안 머리글은 페이지 안 스크립트 지문을
     # 허용하므로, 밖에서 온 글의 '<' 는 글자로 바꿔 태그가 못 들어오게 한다(11/20 보안 검토). '>' 는 인용(>)이라 둔다.
-    one = lambda s: re.sub(r"\s+", " ", str(s or "")).replace("<", "").replace(">", "").strip()
+    one = lambda s: re.sub(r"[\s\"<>]+", " ", str(s or "")).strip()   # 머리말 값은 화면 속성에도 들어간다 — 따옴표·꺾쇠 빼기
     title, body = one(d.get("title")), clean(d.get("content")).replace("<", "&lt;")
+    body = re.sub(r"\[([^\]]+)\]\(([^)]*)\)", lambda m: m.group(0) if SAFE_HREF.fullmatch(m.group(2)) else m.group(1), body)
     if not title or len(re.sub(r"[#>|*\-\s]", "", body)) < 100:
         return "거절", "제목이 없거나 본문이 100자 미만"   # 빈 페이지가 검색에 남으면 손해, 성공으로 적히면 아무도 모른다
     summary = one(d.get("summary")) or one(re.sub(r"[#>|*\-]", " ", body))[:150]

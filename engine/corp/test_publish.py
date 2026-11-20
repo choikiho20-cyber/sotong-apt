@@ -92,4 +92,35 @@ r = sh(ws, sys.executable, "-I", "-X", "utf8", "_engine/engine/corp/deploy.py", 
 assert r.returncode and "남의 사이트" in (r.stdout + r.stderr) and "pages deploy" not in r.stdout, r.stdout[-300:]
 assert not list(ws.glob("PWNED_*")), f"세대 저장소 코드가 실행됨: {[p.name for p in ws.glob('PWNED_*')]}"
 print("E 통과 — 올릴 곳 바꿔치기 거부 · 저장소에 심은 build.py/publish.py/hashlib.py/json.py 한 번도 안 돎")
+
+# F 데이터 칸으로 코드·열쇠를 빼 가는 길(11/20 보안 검토 2차): 세대 저장소에 직접 써 넣어도 올리기 전에 막힌다
+cfg["pages_project"] = "sim-dummy"
+(ws / "config.json").write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+def refused(why):
+    r = sh(ws, sys.executable, "-I", "-X", "utf8", "_engine/engine/corp/deploy.py", ".", env=env)
+    assert r.returncode and "세대 데이터 검사" in (r.stdout + r.stderr) and "pages deploy" not in r.stdout, (why, r.stdout[-300:], r.stderr[-300:])
+evil = ws / "content" / "evil.md"
+evil.write_text('---\ntitle: x\n---\n\n[누르세요](" onmouseover="alert(1))\n', encoding="utf-8"); refused("링크 속성 깨기")
+evil.write_text('---\ntitle: x" onfocus="alert(1)\n---\n\n본문\n', encoding="utf-8"); refused("머리말 따옴표")
+evil.write_text('---\ntitle: x\n---\n\n<img src=x onerror=alert(1)>\n', encoding="utf-8"); refused("태그")
+evil.unlink()
+cfg["og_image"] = "../../../../proc/self/environ"
+(ws / "config.json").write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8"); refused("og_image 밖 경로")
+cfg.pop("og_image")
+(ws / "config.json").write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+try:
+    os.symlink(str(S / "법인도구" / "leak_trace.py"), ws / "assets" / "x.txt"); refused("바로가기")
+    (ws / "assets" / "x.txt").unlink(); link = "바로가기·"
+except OSError:
+    link = "(이 PC는 바로가기 만들기 권한 없음 — 건너뜀) "
+# 글해줌 inbox 로 온 위험한 링크·따옴표는 publish 가 글자로 바꿔 통과시킨다
+(ws / "inbox").mkdir(exist_ok=True)
+(ws / "inbox/e.json").write_text(json.dumps({"title": '제목 "따옴표"', "content": f"{body}\n\n[클릭](javascript:alert(1)) [근거](https://law.go.kr/법령/상법)"},
+                                            ensure_ascii=False), encoding="utf-8")
+assert sh(ws, sys.executable, "-I", "-X", "utf8", "_engine/engine/corp/publish.py", "--inbox", "--unit", ".").returncode == 0
+r = sh(ws, sys.executable, "-I", "-X", "utf8", "_engine/engine/corp/deploy.py", ".", env=env)
+assert r.returncode == 0, r.stdout[-400:] + r.stderr[-300:]
+page = (ws / "dist" / "posts" / f"{today}-3.html").read_text(encoding="utf-8")
+assert "javascript:" not in page and "클릭" in page and 'href="https://law.go.kr/법령/상법"' in page and '"따옴표"' not in page
+print(f"F 통과 — 링크 속성 깨기·머리말 따옴표·태그·og_image 밖 경로·{link}거부, inbox 의 javascript: 링크는 글자로")
 shutil.rmtree(T, ignore_errors=True)
