@@ -96,9 +96,10 @@ def ping_indexnow(u, site):
 
 def run(cmd, cwd, inp=None, env=None):
     # shell 은 Windows 의 npx(.cmd)에만 — 리눅스(Actions)에서 목록을 shell 로 넘기면 첫 낱말만 돈다
-    r = subprocess.run(cmd, cwd=cwd, input=inp, capture_output=True, text=True, encoding="utf-8", errors="replace",
+    # 입력은 bytes 로 — text=True 면 Windows 가 "\n" 을 "\r\n" 으로 바꿔 보내서, 비밀값으로 넣은 SSH 열쇠가 깨진다(첫 Actions 실패, 11/20)
+    r = subprocess.run(cmd, cwd=cwd, input=inp.encode("utf-8") if inp is not None else None, capture_output=True,
                        shell=WIN and cmd[0] == "npx", env=env)
-    return r.returncode, (r.stdout or "") + (r.stderr or "")
+    return r.returncode, (r.stdout or b"").decode("utf-8", "replace") + (r.stderr or b"").decode("utf-8", "replace")
 
 
 def build_cmd(u):
