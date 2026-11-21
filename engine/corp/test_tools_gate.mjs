@@ -150,7 +150,8 @@ console.log('L~M 통과 (무료 체험 문·견본 체험 링크)');
     assert.ok(nodeCrypto.verify('RSA-SHA256', Buffer.from(jwt[0] + '.' + jwt[1]), publicKey, b64u(jwt[2])), 'JWT 서명이 앱 키와 맞아야 한다');
     assert.equal(gh[1].url, 'https://api.github.com/app/installations/123/access_tokens');
     assert.deepEqual(JSON.parse(gh[1].init.body), { repositories: [adminRepo.split('/')[1]], permissions: { contents: 'write' } });
-    const ac = r.headers.get('Set-Cookie'); assert.match(ac, /^admin_auth=owner%40test\.kr\|\d+\|[a-f0-9]{64}; Path=\/admin; Max-Age=2592000; HttpOnly; Secure; SameSite=Strict$/);
+    const [ac, mk] = r.headers.getSetCookie(); assert.match(ac, /^admin_auth=owner%40test\.kr\|\d+\|[a-f0-9]{64}; Path=\/admin; Max-Age=2592000; HttpOnly; Secure; SameSite=Strict$/);
+    assert.equal(mk, 'admin_has=1; Path=/admin; Max-Age=2592000; Secure; SameSite=Strict');   // 표시 쿠키는 HttpOnly 가 아니다(화면이 읽는다)
     const aj = ac.split(';')[0];
     n0 = calls.length; r = await worker.fetch(jpost('/admin/token', null, { Cookie: aj }), envA); assert.equal(r.status, 200); assert.equal(calls.length, n0, '같은 날 쿠키는 글해줌에 안 묻는다');
     r = await worker.fetch(jpost('/admin/token', null, { Cookie: aj.replace(/[a-f0-9]{64}$/, '0'.repeat(64)) }), envA); assert.equal(r.status, 401);
@@ -161,8 +162,9 @@ console.log('L~M 통과 (무료 체험 문·견본 체험 링크)');
     serverReply = { status: 403, body: { ok: false, reason: '구독 끝' } };
     r = await worker.fetch(jpost('/admin/token', null, { Cookie: oldA }), envA); assert.equal(r.status, 401); assert.deepEqual(calls.at(-1), { email: 'owner@test.kr', key: 'k1' });
     serverReply = { status: 200, body: { ok: true } };
-    r = await worker.fetch(jpost('/admin/token', null, { Cookie: oldA }), envA); assert.equal(r.status, 200); assert.match(r.headers.get('Set-Cookie'), new RegExp(`\\|${ad}\\|`));
-    r = await worker.fetch(jpost('/admin/logout'), envA); assert.match(r.headers.get('Set-Cookie'), /^admin_auth=\|0\|; Path=\/admin; Max-Age=0;/);
+    r = await worker.fetch(jpost('/admin/token', null, { Cookie: oldA }), envA); assert.equal(r.status, 200); assert.match(r.headers.getSetCookie()[0], new RegExp(`\\|${ad}\\|`));
+    r = await worker.fetch(jpost('/admin/logout'), envA); const gone = r.headers.getSetCookie();
+    assert.match(gone[0], /^admin_auth=\|0\|; Path=\/admin; Max-Age=0;/); assert.match(gone[1], /^admin_has=1; Path=\/admin; Max-Age=0;/);
     serverReply = { status: 401, body: { ok: false, reason: '틀림' } };
     for (let i = 0; i < 5; i++) { r = await worker.fetch(jpost('/admin/login', { email: 'owner@test.kr', pw: 'x' }, { 'CF-Connecting-IP': '7.7.7.7' }), envA); assert.equal(r.status, 401); }
     r = await worker.fetch(jpost('/admin/login', { email: 'owner@test.kr', pw: 'x' }, { 'CF-Connecting-IP': '7.7.7.7' }), envA); assert.equal(r.status, 429);

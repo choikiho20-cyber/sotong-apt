@@ -69,9 +69,11 @@ details summary{cursor:pointer;color:var(--ink2);font-size:14px}
 <div class="card" id="gate">
   <h2>들어가기</h2>
   <p class="hint" id="pwHint">업무 도구와 같은 <b>글해줌 이메일·비밀번호</b>로 들어갑니다. 한 번 들어오면 30일 동안 유지됩니다.</p>
-  <input type="email" id="email" autocomplete="username" placeholder="글해줌 이메일">
-  <input type="password" id="pw" autocomplete="current-password" placeholder="비밀번호" style="margin-top:8px">
-  <div class="row"><button class="btn solid" id="pwGo">들어가기</button></div>
+  <form id="loginForm" autocomplete="on">
+    <input type="email" id="email" autocomplete="username" placeholder="글해줌 이메일">
+    <input type="password" id="pw" autocomplete="current-password" placeholder="비밀번호" style="margin-top:8px">
+    <div class="row"><button class="btn solid" id="pwGo" type="submit">들어가기</button></div>
+  </form>
   <p class="hint">비밀번호는 글해줌과 같습니다. <a href="https://geulhaejum.kr/forgot-password" target="_blank" rel="noopener">비밀번호를 잊으셨나요?</a></p>
 </div>
 
@@ -214,7 +216,8 @@ async function askWorker(path,body){
   try{sessionStorage.setItem(KEY,j.token)}catch(e){throw new Error('이 브라우저는 저장이 막혀 있습니다.')}
   return j;
 }
-const refresh=()=>askWorker('/admin/token').then(()=>true,()=>false);
+const hasCookie=()=>/(?:^|;\s*)admin_has=1(?:;|$)/.test(document.cookie);   // 로그인 뒤에만 생기는 표시 쿠키(비밀값 없음) — 없으면 재발급을 묻지 않는다(콘솔 401 방지)
+const refresh=()=>hasCookie()?askWorker('/admin/token').then(()=>true,()=>false):Promise.resolve(false);
 async function pwLogin(){
   const email=$('email').value.trim(), pw=$('pw').value; if(!email||!pw) return alert('글해줌 이메일과 비밀번호를 넣어 주세요.');
   $('pwGo').disabled=true; $('pwGo').textContent='확인 중…';
@@ -222,7 +225,7 @@ async function pwLogin(){
     if(expired){expired=false;$('gate').hidden=true;$('who').textContent='들어와 있음 · 나가기'} else gate();
   }catch(e){alert(e.message)}finally{$('pwGo').disabled=false;$('pwGo').textContent='들어가기'}
 }
-$('pwGo').onclick=pwLogin; $('pw').addEventListener('keydown',e=>{if(e.key==='Enter')pwLogin()});
+$('loginForm').addEventListener('submit',e=>{e.preventDefault();pwLogin()});   // form 이라 브라우저 비밀번호 저장이 붙는다. CSP form-action 'none' 은 preventDefault 라 안 걸림
 $('who').onclick=async()=>{
   if(DEMO||!token()) return;
   if(!confirm('이 기기에서 나갈까요? 다음에 다시 글해줌 이메일·비밀번호를 넣게 됩니다.')) return;
@@ -365,7 +368,7 @@ $('save').onclick=async()=>{
 };
 
 $('demoNote').hidden=!DEMO; if(DEMO){$('gate').hidden=true}
-if(!DEMO&&!token()) refresh().then(gate); else gate();   // 30일 쿠키가 살아 있으면 비밀번호 없이 들어간다
+if(!DEMO&&!token()&&hasCookie()) refresh().then(gate); else gate();   // 30일 쿠키가 살아 있으면 비밀번호 없이 들어간다
 </script>
 </body>
 </html>

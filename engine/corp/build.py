@@ -496,12 +496,15 @@ async function appToken(env) {
   return { token: j.token, exp: j.expires_at };
 }
 const acookie = (email, day, sig, age = 2592000) => `admin_auth=${encodeURIComponent(email)}|${day}|${sig}; Path=/admin; Max-Age=${age}; HttpOnly; Secure; SameSite=Strict`;
+// 표시 쿠키(비밀값 없음, 화면 JS 가 읽는다): 있을 때만 화면이 /admin/token 재발급을 시도한다 — 쿠키 없는 첫 방문에 401 콘솔 오류가 안 남게(11/21 실측)
+const amark = (age = 2592000) => `admin_has=1; Path=/admin; Max-Age=${age}; Secure; SameSite=Strict`;
+const withCookies = (res, ...cs) => { for (const c of cs) res.headers.append('Set-Cookie', c); return res; };
 async function admin(request, env, url, ip) {
   if (!ADMIN_REPO) return json({ reason: '견본에는 관리 화면 로그인이 없습니다.' }, 404);
   if (request.method !== 'POST') return json({ reason: 'POST' }, 405);
   const sfs = request.headers.get('Sec-Fetch-Site');
   if (sfs && sfs !== 'same-origin') return json({ reason: '다른 사이트에서는 들어올 수 없습니다.' }, 403);
-  if (url.pathname === '/admin/logout') return json({ ok: true }, 200, { 'Set-Cookie': acookie('', 0, '', 0) });
+  if (url.pathname === '/admin/logout') return withCookies(json({ ok: true }, 200), acookie('', 0, '', 0), amark(0));
   if (!env.TOOLS_OWNER_EMAIL) return json({ reason: '이 홈페이지에 연결된 글해줌 계정이 아직 지정되지 않았습니다. 운영자에게 문의하세요.' }, 401);
   if (!env.GH_APP_ID || !env.GH_APP_KEY) return json({ reason: '설정이 아직 안 됐습니다(GH_APP_KEY). 운영자에게 문의하세요.' }, 401);
   let email;
@@ -523,7 +526,7 @@ async function admin(request, env, url, ip) {
   } else return json({ reason: '없는 주소' }, 404);
   try {
     const t = await appToken(env);
-    return json(t, 200, { 'Set-Cookie': acookie(email, today(), await sign(env, url.host, email, today(), 'corp-admin-v1')) });
+    return withCookies(json(t, 200), acookie(email, today(), await sign(env, url.host, email, today(), 'corp-admin-v1')), amark());
   } catch (e) { return json({ reason: e.message }, 502); }
 }
 
