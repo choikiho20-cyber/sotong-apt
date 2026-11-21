@@ -10,6 +10,7 @@ config.json + content/*.md + templates/ -> dist/
 import hashlib
 import html
 import json
+import os
 import re
 import secrets
 import shutil
@@ -476,7 +477,8 @@ const TOO_MANY = '비밀번호를 여러 번 틀려 10분 동안 잠겼습니다
 // 30일 쿠키(admin_auth, Path=/admin, HttpOnly)로는 비밀번호 없이 열쇠만 다시 받고, 날이 바뀌면 구독을 조용히 다시 확인한다(도구 문과 같음).
 // Pages 비밀값: GH_APP_ID · GH_APP_KEY(앱 비밀키 PKCS#8 DER base64 한 줄 — deploy.py admin/login 이 넣음). 견본(ADMIN_REPO 없음)엔 이 문이 없다.
 // 앱 비밀키는 글해줌 서버와 각 세대 Pages 두 곳에 있다 — 새면 GitHub 앱에서 키를 다시 만들고 deploy.py admin all.
-const ADMIN_REPO = '__ADMIN_REPO__';
+// ADMIN_REPO 는 Actions 가 GitHub 에서 받는 저장소 이름(GITHUB_REPOSITORY)으로 고정된다(build.py admin_repo_of) — 고객이 config 에 남의 저장소를 적어도 그 열쇠는 안 나온다(11/21 보안 검토).
+const ADMIN_REPO = __ADMIN_REPO__;
 const json = (o, status, extra = {}) => new Response(JSON.stringify(o), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...GATE_SEC, ...extra } });
 const b64url = u => btoa(String.fromCharCode(...u)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 async function appToken(env) {
@@ -532,7 +534,7 @@ export default {
     if (url.hostname.startsWith('www.')) { url.hostname = url.hostname.slice(4); return Response.redirect(url.toString(), 301); }
     // 옛 임시 주소(<프로젝트>.pages.dev) → 정식 주소로 301. 옛 링크로 온 손님 문의도 들어가고(문의 서버는 보낸 주소 = 사이트 이름만 받는다),
     // 검색엔진엔 주소가 하나. 배포마다 생기는 미리보기 주소(<해시>.<프로젝트>.pages.dev)는 그대로. HOME 은 build.py 가 정식 주소일 때만 채운다.
-    const HOME = '__HOME__';
+    const HOME = __HOME__;
     if (HOME && /^[^.]+\.pages\.dev$/.test(url.hostname)) { url.hostname = HOME; return Response.redirect(url.toString(), 301); }
     const ip = request.headers.get('CF-Connecting-IP') || 'local';
     if (url.pathname.startsWith('/admin/')) return admin(request, env, url, ip);   // 관리 화면 들어가기(위 admin 주석) — /admin 화면 자체는 정적 파일
@@ -718,11 +720,16 @@ def write_sec_headers(cfg):
 
 
 def admin_repo_of(cfg):
-    """관리 화면·일꾼의 자바스크립트 문자열에 들어가는 저장소 이름(owner/name) — 모양을 좁혀 코드로 번지지 않게."""
+    """관리 화면·일꾼에 들어가는 저장소 이름(owner/name). config 는 고객(관리 화면 열쇠)이 고칠 수 있는 파일이라, Actions 에서는
+    GitHub 이 주는 GITHUB_REPOSITORY(고객이 못 바꾸는 값)로 고정하고 config 가 다르면 짓지 않는다 — 남의 저장소 이름을 적어 그 저장소
+    열쇠를 받아 가는 길을 막는다(11/21 보안 검토). 이 PC 미리보기만 config 값."""
     repo = (cfg.get("admin_repo") or "").strip()
     if repo and not re.fullmatch(r"[\w.-]+/[\w.-]+", repo):
         sys.exit(f"config admin_repo 는 owner/name 모양이어야 합니다: {repo}")
-    return repo
+    real = os.environ.get("GITHUB_REPOSITORY", "").strip()
+    if real and repo and repo != real:
+        sys.exit(f"config admin_repo({repo})가 이 저장소({real})와 다릅니다 — 다른 저장소 열쇠는 발급하지 않습니다")
+    return real or repo
 
 
 def write_admin(cfg, site):
@@ -1117,9 +1124,12 @@ def main():
     # 임시 배포 주소는 색인을 막는다. 버릴 주소에 검색을 쌓으면 도메인 이전 때 그만큼 손해.
     staging = any(h in site for h in ("pages.dev", "netlify.app", "vercel.app", "github.io", "example.com"))
     # /tools/ 글해줌 구독 문 — Cloudflare Pages 가 dist/_worker.js 를 먼저 태운다. 설정은 WORKER_JS 위 주석.
+    # 일꾼 코드에 들어가는 값 둘은 json.dumps(따옴표 포함)로 — 값이 어떻든 문자열 밖으로 못 나간다. 호스트는 모양까지 좁힌다(11/21 보안 검토)
+    home = "" if staging else re.sub(r"^https?://", "", site).split("/")[0]
+    if home and not re.fullmatch(r"[A-Za-z0-9.-]+", home):
+        sys.exit(f"site_url 호스트 모양이 이상합니다: {home}")
     (DIST / "_worker.js").write_text(
-        WORKER_JS.replace("__HOME__", "" if staging else re.sub(r"^https?://", "", site).split("/")[0])
-        .replace("__ADMIN_REPO__", admin_repo_of(cfg)), encoding="utf-8")
+        WORKER_JS.replace("__HOME__", json.dumps(home)).replace("__ADMIN_REPO__", json.dumps(admin_repo_of(cfg))), encoding="utf-8")
 
     # SEO: sitemap + robots (발행 시마다 자동 갱신)
     # Cloudflare Pages는 .html 주소를 확장자 없는 주소로 308 넘긴다. 검색엔진에는 최종 주소를 알려야 한다.

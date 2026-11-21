@@ -14,7 +14,7 @@ git = lambda cwd, *a: sh(cwd, "git", "-c", "user.name=t", "-c", "user.email=t@t"
 
 shutil.copytree(S / "sotong-apt/units/demo-corp", ws, ignore=shutil.ignore_patterns("dist", "__pycache__"))
 cfg = json.loads((ws / "config.json").read_text(encoding="utf-8"))
-cfg.update(admin_repo="x/sim", pages_project="sim-dummy")
+cfg.update(admin_repo="x/sim-dummy", pages_project="sim-dummy")   # 실고객 불변식: 저장소 이름 = pages_project = GITHUB_REPOSITORY
 (ws / "config.json").write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 # 공격자(고객 관리 화면 열쇠·털린 글해줌 앱)가 세대 저장소에 심을 수 있는 것: 연결 파일 바꿔치기·표준 모듈 가로채기.
 # Actions 는 엔진만 돌려야 하므로 이 파일들이 실행되면(PWNED_*) 실패다.
@@ -144,13 +144,24 @@ r = sh(ws, sys.executable, "-I", "-X", "utf8", "_engine/engine/corp/deploy.py", 
 assert r.returncode == 0, r.stdout[-400:] + r.stderr[-300:]
 assert (ws / "dist" / "posts" / "post-admin-ok.html").exists() and not (ws / "dist" / "posts" / "post-admin-bad.html").exists()
 adm = (ws / "dist" / "admin.html").read_text(encoding="utf-8")
-assert "const REPO='x/sim'" in adm and "corp_admin_x_sim" in adm and not (ws / "dist" / "admin-demo.json").exists()
+assert "const REPO='x/sim-dummy'" in adm and "corp_admin_x_sim_dummy" in adm and not (ws / "dist" / "admin-demo.json").exists()
 hdr = (ws / "dist" / "_headers").read_text(encoding="utf-8")
 assert "/admin.html\n" in hdr and "X-Robots-Tag: noindex" in hdr and "Disallow: /admin.html" not in (ws / "dist" / "robots.txt").read_text(encoding="utf-8")   # 임시 주소는 전체 Disallow
 # 들어가기 = 글해줌 로그인(11/21): 일꾼에 저장소 이름이 들어가고, 비밀번호 파일은 없다. 일꾼 자체검사 N(실고객 세대 길)을 여기서 돈다
 wk = (ws / "dist" / "_worker.js").read_text(encoding="utf-8")
-assert "const ADMIN_REPO = 'x/sim'" in wk and "admin-key" not in adm and not (ws / "dist" / "admin-key.json").exists()
+assert 'const ADMIN_REPO = "x/sim-dummy"' in wk and "admin-key" not in adm and not (ws / "dist" / "admin-key.json").exists()
 r = sh(ws, "node", str(ws / "_engine" / "engine" / "corp" / "test_tools_gate.mjs"))
 assert r.returncode == 0 and "N 통과 (관리 화면" in r.stdout, r.stdout[-700:] + r.stderr[-700:]
 print("G 통과 — 관리 화면 글: 걸린 글만 _보류, 정상 글은 올라감 · admin.html 실고객 모드 · 관리 화면 보안 머리글 따로 · 일꾼 /admin 글해줌 로그인 문(N)")
+
+# H 고객이 config 의 admin_repo 를 남의 저장소로 바꿔도 Actions 는 GitHub 이 준 저장소 이름으로 고정 — 짓지 않는다(11/21 보안 검토, 남의 저장소 열쇠 발급 차단)
+cfg = json.loads((ws / "config.json").read_text(encoding="utf-8")); cfg["admin_repo"] = "x/other-customer"
+(ws / "config.json").write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+r = sh(ws, sys.executable, "-I", "-X", "utf8", "_engine/engine/corp/deploy.py", ".", env=env)
+assert r.returncode and "다른 저장소 열쇠는 발급하지 않습니다" in (r.stdout + r.stderr) and "pages deploy" not in r.stdout, r.stdout[-300:] + r.stderr[-300:]
+cfg["site_url"] = "https://evil.test\\"; cfg["admin_repo"] = "x/sim-dummy"
+(ws / "config.json").write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+r = sh(ws, sys.executable, "-I", "-X", "utf8", "_engine/engine/corp/deploy.py", ".", env=env)
+assert r.returncode and "pages deploy" not in r.stdout, "역슬래시가 든 주소가 일꾼 코드로 들어가면 안 된다"
+print("H 통과 — config 의 남의 저장소 이름·이상한 주소는 짓지 않음(열쇠 발급 저장소는 GITHUB_REPOSITORY 로 고정)")
 shutil.rmtree(T, ignore_errors=True)

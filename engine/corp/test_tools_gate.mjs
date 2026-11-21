@@ -82,7 +82,7 @@ r = await worker.fetch(req('/'), env); assert.equal(await r.text(), 'ASSET');
 r = await worker.fetch(new Request('https://www.site.test/posts/a?x=1'), env);
 assert.equal(r.status, 301); assert.equal(r.headers.get('Location'), 'https://site.test/posts/a?x=1');
 // K 옛 임시 주소(프로젝트.pages.dev) → 정식 주소 301 — 정식 주소가 있는 세대만. 미리보기 주소(해시.프로젝트.pages.dev)는 그대로
-const home = (await import('node:fs')).readFileSync(process.cwd() + '/dist/_worker.js', 'utf8').match(/const HOME = '([^']*)'/)[1];
+const home = (await import('node:fs')).readFileSync(process.cwd() + '/dist/_worker.js', 'utf8').match(/const HOME = "([^"]*)"/)[1];
 r = await worker.fetch(new Request('https://proj.pages.dev/posts/a?x=1'), env);
 if (home) { assert.equal(r.status, 301); assert.equal(r.headers.get('Location'), `https://${home}/posts/a?x=1`); }
 else assert.equal(await r.text(), 'ASSET');
@@ -120,7 +120,7 @@ console.log('L~M 통과 (무료 체험 문·견본 체험 링크)');
 
 // N 관리 화면 들어가기(11/21 대표님 "원래 쓰던 비밀번호로"): 견본은 404. 실고객 세대는 글해줌 로그인 → 글해줌 앱 JWT 로 저장소 열쇠 → 30일 쿠키 → /admin/token 재발급
 { const src = (await import('node:fs')).readFileSync(process.cwd() + '/dist/_worker.js', 'utf8');
-  const adminRepo = src.match(/const ADMIN_REPO = '([^']*)'/)[1];
+  const adminRepo = src.match(/const ADMIN_REPO = "([^"]*)"/)[1];
   const nodeCrypto = await import('node:crypto');
   const { privateKey, publicKey } = nodeCrypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
   const envA = { ...env, TOOLS_OWNER_EMAIL: 'owner@test.kr', GH_APP_ID: '77', GH_APP_KEY: privateKey.export({ type: 'pkcs8', format: 'der' }).toString('base64') };

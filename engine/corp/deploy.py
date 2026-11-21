@@ -377,7 +377,7 @@ if __name__ == "__main__":
         code, out = run(build_cmd(u), u, env=no_keys)
         print("   ", " / ".join(l for l in out.splitlines() if l.startswith(("빌드 완료", "도구 코드"))) or out[-400:])
         if code or "위반 있음" in out:
-            sys.exit(f"{u.name}: 빌드 실패 또는 심의 점검 위반 — 올리지 않습니다")
+            sys.exit(f"{u.name}: 빌드 실패 또는 심의 점검 위반 — 올리지 않습니다\n{out[-500:]}")   # 이유를 같이 — Actions 기록에서 바로 보이게
         code, out = run(["node", str(ENGINE / "test_tools_gate.mjs")], u, env=no_keys)
         if code:
             sys.exit(f"{u.name}: 도구 문 자체검사 실패 — 올리지 않습니다\n{out[-600:]}")
