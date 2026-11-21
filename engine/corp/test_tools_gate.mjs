@@ -1,6 +1,7 @@
 // /tools/ 글해줌 구독 문(dist/_worker.js) 자체검사. 실행: python build.py 뒤  node test_tools_gate.mjs
 // 글해줌 서버는 가짜(fetch 를 바꿔 끼움): A 로그인 ok → 쿠키  B 틀린 비밀번호 401  C 같은 날 쿠키 → 서버 안 묻고 통과
 // D 날이 바뀐 쿠키 → key 로 재확인, 해지면 401  E 서버 죽음 → 401(닫힘)  F 위조 쿠키 401  G /tools 밖은 그대로
+// N 관리 화면 들어가기(/admin/login·token·logout, 11/21): 글해줌 로그인 → 앱 열쇠(JWT RS256) → 30일 쿠키. 견본(ADMIN_REPO 없음)은 404
 import assert from 'node:assert/strict';
 // 세대 폴더에서 실행: node ../../engine/corp/test_tools_gate.mjs  (cwd 의 dist/_worker.js 를 검사)
 import { pathToFileURL } from 'node:url';
@@ -116,3 +117,60 @@ console.log('A~K 통과' + (home ? ` (정식 주소 ${home})` : ' (임시 주소
   r = await worker.fetch(req('/tools/'), { ...env, TOOLS_PASSWORD: 'longpass1234', TOOLS_TRIAL_URL: 'https://trial.test/tools/' }); h = await r.text();
   assert.match(h, /href="https:\/\/trial\.test\/tools\/"[^>]*>비밀번호가 없으신가요\? 무료로 체험해 보기/); }
 console.log('L~M 통과 (무료 체험 문·견본 체험 링크)');
+
+// N 관리 화면 들어가기(11/21 대표님 "원래 쓰던 비밀번호로"): 견본은 404. 실고객 세대는 글해줌 로그인 → 글해줌 앱 JWT 로 저장소 열쇠 → 30일 쿠키 → /admin/token 재발급
+{ const src = (await import('node:fs')).readFileSync(process.cwd() + '/dist/_worker.js', 'utf8');
+  const adminRepo = src.match(/const ADMIN_REPO = '([^']*)'/)[1];
+  const nodeCrypto = await import('node:crypto');
+  const { privateKey, publicKey } = nodeCrypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
+  const envA = { ...env, TOOLS_OWNER_EMAIL: 'owner@test.kr', GH_APP_ID: '77', GH_APP_KEY: privateKey.export({ type: 'pkcs8', format: 'der' }).toString('base64') };
+  const gh = [], geulFetch = globalThis.fetch;   // GitHub 도 가짜 — 글해줌 가짜는 그대로
+  globalThis.fetch = async (url, init) => {
+    if (!String(url).startsWith('https://api.github.com/')) return geulFetch(url, init);
+    gh.push({ url: String(url), init });
+    if (String(url).endsWith('/installation')) return { ok: true, status: 200, json: async () => ({ id: 123 }) };
+    return { ok: true, status: 201, json: async () => ({ token: 'ghs_fake', expires_at: '2099-01-01T00:00:00Z' }) };
+  };
+  // 앞 검사들이 'local' IP 로 4번 틀려 놓았다 — 관리 문 검사는 다른 IP 로(잠금은 아래서 따로 본다)
+  const jpost = (path, body, extra = {}) => req(path, { method: 'POST', body: JSON.stringify(body || {}), headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '6.6.6.6', ...extra } });
+  if (!adminRepo) {
+    r = await worker.fetch(jpost('/admin/login', { email: 'owner@test.kr', pw: 'pw' }), envA); assert.equal(r.status, 404);
+    console.log('N 통과 (견본 세대 — 관리 로그인 문 없음)');
+  } else {
+    serverReply = { status: 200, body: { ok: true } };
+    let n0 = calls.length;   // 주인 계정 미지정 → 글해줌에 묻지도 않고 닫힘(관리 화면엔 '구독자 누구나'가 없다)
+    r = await worker.fetch(jpost('/admin/login', { email: 'owner@test.kr', pw: 'pw' }), { ...envA, TOOLS_OWNER_EMAIL: '' }); assert.equal(r.status, 401); assert.equal(calls.length, n0);
+    r = await worker.fetch(jpost('/admin/login', { email: 'owner@test.kr', pw: 'pw' }, { 'Sec-Fetch-Site': 'cross-site' }), envA); assert.equal(r.status, 403);
+    r = await worker.fetch(jpost('/admin/login', { email: 'other@test.kr', pw: 'pw' }), envA); assert.equal(r.status, 401); assert.match((await r.json()).reason, /연결된 글해줌 계정이 아닙니다/);
+    r = await worker.fetch(jpost('/admin/login', { email: 'Owner@Test.kr', pw: 'pw' }), envA); assert.equal(r.status, 200);
+    const j = await r.json(); assert.equal(j.token, 'ghs_fake'); assert.deepEqual(calls.at(-1), { email: 'owner@test.kr', password: 'pw' });
+    assert.equal(gh[0].url, `https://api.github.com/repos/${adminRepo}/installation`);
+    const jwt = gh[0].init.headers.Authorization.slice(7).split('.'), b64u = s => Buffer.from(s.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+    const claims = JSON.parse(b64u(jwt[1])); assert.equal(claims.iss, '77'); assert.ok(claims.exp - claims.iat <= 600, 'GitHub 은 10분 넘는 JWT 를 거절한다');
+    assert.ok(nodeCrypto.verify('RSA-SHA256', Buffer.from(jwt[0] + '.' + jwt[1]), publicKey, b64u(jwt[2])), 'JWT 서명이 앱 키와 맞아야 한다');
+    assert.equal(gh[1].url, 'https://api.github.com/app/installations/123/access_tokens');
+    assert.deepEqual(JSON.parse(gh[1].init.body), { repositories: [adminRepo.split('/')[1]], permissions: { contents: 'write' } });
+    const ac = r.headers.get('Set-Cookie'); assert.match(ac, /^admin_auth=owner%40test\.kr\|\d+\|[a-f0-9]{64}; Path=\/admin; Max-Age=2592000; HttpOnly; Secure; SameSite=Strict$/);
+    const aj = ac.split(';')[0];
+    n0 = calls.length; r = await worker.fetch(jpost('/admin/token', null, { Cookie: aj }), envA); assert.equal(r.status, 200); assert.equal(calls.length, n0, '같은 날 쿠키는 글해줌에 안 묻는다');
+    r = await worker.fetch(jpost('/admin/token', null, { Cookie: aj.replace(/[a-f0-9]{64}$/, '0'.repeat(64)) }), envA); assert.equal(r.status, 401);
+    r = await worker.fetch(jpost('/admin/token', null, { Cookie: jar }), envA); assert.equal(r.status, 401, '도구 쿠키로는 관리 열쇠 못 받음');
+    r = await worker.fetch(new Request('https://other.test/admin/token', { method: 'POST', headers: { Cookie: aj } }), envA); assert.equal(r.status, 401, '다른 사이트 쿠키');
+    const [ae, ad] = aj.slice('admin_auth='.length).split('|');
+    const oldA = `admin_auth=${ae}|${ad - 1}|${await sha('corp-admin-v1:k1:site.test:owner@test.kr:' + (ad - 1))}`;
+    serverReply = { status: 403, body: { ok: false, reason: '구독 끝' } };
+    r = await worker.fetch(jpost('/admin/token', null, { Cookie: oldA }), envA); assert.equal(r.status, 401); assert.deepEqual(calls.at(-1), { email: 'owner@test.kr', key: 'k1' });
+    serverReply = { status: 200, body: { ok: true } };
+    r = await worker.fetch(jpost('/admin/token', null, { Cookie: oldA }), envA); assert.equal(r.status, 200); assert.match(r.headers.get('Set-Cookie'), new RegExp(`\\|${ad}\\|`));
+    r = await worker.fetch(jpost('/admin/logout'), envA); assert.match(r.headers.get('Set-Cookie'), /^admin_auth=\|0\|; Path=\/admin; Max-Age=0;/);
+    serverReply = { status: 401, body: { ok: false, reason: '틀림' } };
+    for (let i = 0; i < 5; i++) { r = await worker.fetch(jpost('/admin/login', { email: 'owner@test.kr', pw: 'x' }, { 'CF-Connecting-IP': '7.7.7.7' }), envA); assert.equal(r.status, 401); }
+    r = await worker.fetch(jpost('/admin/login', { email: 'owner@test.kr', pw: 'x' }, { 'CF-Connecting-IP': '7.7.7.7' }), envA); assert.equal(r.status, 429);
+    serverReply = { status: 200, body: { ok: true } };
+    r = await worker.fetch(req('/admin/login'), envA); assert.equal(r.status, 405);
+    r = await worker.fetch(req('/admin'), envA); assert.equal(await r.text(), 'ASSET');
+    r = await worker.fetch(jpost('/admin/login', { email: 'owner@test.kr', pw: 'pw' }), { ...envA, GH_APP_KEY: '' }); assert.equal(r.status, 401); assert.match((await r.json()).reason, /GH_APP_KEY/);
+    console.log(`N 통과 (관리 화면 글해줌 로그인 · 앱 열쇠 JWT · 30일 쿠키 · 잠금) — ${adminRepo}`);
+  }
+  globalThis.fetch = geulFetch;
+}

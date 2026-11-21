@@ -2,7 +2,8 @@
 """법인 단지 짓고 올리기.  python -X utf8 deploy.py <세대|all>
 새 고객 개통(한 번에).   python -X utf8 deploy.py open <세대> 받은값.json [도메인]   ← 대표님 터미널
 처음 한 번 열쇠 준비.    python -X utf8 deploy.py setup
-도구 문을 글해줌 로그인으로. python -X utf8 deploy.py login <세대> <고객 글해줌 메일>
+도구 문을 글해줌 로그인으로. python -X utf8 deploy.py login <세대> <고객 글해줌 메일>   ← 관리 화면(/admin)도 같은 로그인이 된다
+관리 화면 열쇠(글해줌 앱) 다시 넣기. python -X utf8 deploy.py admin <세대|all>   ← 앱 비밀키를 바꿨을 때
 입주 폴더만 만들기.      python -X utf8 deploy.py new <세대> 받은값.json [도메인]
 세대 config.json 의 pages_project(Cloudflare Pages 이름)가 있는 세대가 법인 단지다. 자동차 단지는 cf_project·admin_repo(engine/car/apt.py).
 업무 도구(법인도구/web)·엔진을 고쳤으면 all — 견본은 이 PC에서, 실고객(admin_repo)은 그 저장소 Actions 가 다시 짓는다.
@@ -27,7 +28,7 @@ OWNER = "choikiho20-cyber"
 TRACK_URL = "https://car-track.choikiho20.workers.dev"
 # 열쇠 보관함 — 저장소 밖, 이 PC에만. 값은 화면에 찍지 않고 파일→stdin 으로만 넘긴다.
 #   cloudflare_token.txt(Pages 편집) · cloudflare_account.txt · corp_tool_key(corp-tool 읽기 전용 배포 열쇠)
-#   tools_api_key.txt(글해줌 로그인 문, login 때만) · github_app.json/.pem(글해줌 앱, engine/github_app.py 가 만듦)
+#   tools_api_key.txt(글해줌 로그인 문, login 때만) · github_app.json/.pem(글해줌 앱, engine/github_app.py 가 만듦 — 관리 화면 열쇠 발급에도 쓴다)
 KEYS = Path.home() / ".sotong"
 WIN = sys.platform == "win32"
 sys.path[:0] = [str(ENGINE), str(ENGINE.parent)]   # python -I(Actions)는 스크립트 폴더도 넣지 않는다
@@ -229,14 +230,37 @@ def tools_api_key():
     return p.read_text(encoding="utf-8").strip()
 
 
+def app_keys(project, cwd):
+    """관리 화면(/admin) 열쇠 발급용 글해줌 GitHub 앱 비밀키를 이 세대 Pages 비밀값에 넣는다(값은 화면에 안 나옴).
+    GitHub 이 주는 키는 PKCS#1 인데 일꾼의 WebCrypto 는 PKCS#8 만 읽으므로 여기서 바꿔 한 줄(DER base64)로 넣는다."""
+    import base64
+    from cryptography.hazmat.primitives import serialization   # 이 PC 전용(pip cryptography) — Actions 에선 돌지 않는 길
+    app, pem = KEYS / "github_app.json", KEYS / "github_app.pem"
+    if not (app.exists() and pem.exists()):
+        sys.exit("글해줌 GitHub 앱 열쇠가 없습니다: python -X utf8 engine/github_app.py")
+    key = serialization.load_pem_private_key(pem.read_bytes(), password=None)
+    der = key.private_bytes(serialization.Encoding.DER, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())
+    tools_secret(project, cwd, "GH_APP_ID", str(json.loads(app.read_text(encoding="utf-8"))["id"]))
+    tools_secret(project, cwd, "GH_APP_KEY", base64.b64encode(der).decode())
+
+
+def admin_keys(name):
+    for u in corp_units(name):
+        cfg = json.loads((u / "config.json").read_text(encoding="utf-8"))
+        if cfg.get("admin_repo"):
+            app_keys(cfg["pages_project"], u)
+            print(f"{u.name}: 관리 화면 열쇠(글해줌 앱) 넣음 — 다음 배포부터")
+
+
 def login(name, email):
     """도구 문을 '이 고객의 글해줌 계정'으로 — 구독이 끊기면 하루 안에 문이 닫힌다(판매용). 비밀번호 문은 지운다."""
     u = UNITS / name
     project = json.loads((u / "config.json").read_text(encoding="utf-8"))["pages_project"]
     tools_secret(project, u, "TOOLS_API_KEY", tools_api_key())
     tools_secret(project, u, "TOOLS_OWNER_EMAIL", email.strip())
+    app_keys(project, u)   # 관리 화면(/admin)도 같은 로그인 — 저장소 열쇠 발급용 앱 키(11/21)
     run(["npx", "--yes", "wrangler", "pages", "secret", "delete", "TOOLS_PASSWORD", f"--project-name={project}"], u, inp="y\n")
-    print(f"{name}: 도구 문 = 글해줌 로그인({email.strip()}) — 다음 배포부터 적용(deploy.py {name})")
+    print(f"{name}: 도구 문·관리 화면(/admin) = 글해줌 로그인({email.strip()}) — 다음 배포부터 적용(deploy.py {name})")
 
 
 def open_unit(name, given=None, domain=""):
@@ -302,7 +326,7 @@ def open_unit(name, given=None, domain=""):
     sh(["git", "push", "-u", "origin", "main"], u)
     print(f"""
 개통 끝 — 2~4분 뒤 {cfg['site_url']}/   (진행: gh run watch -R {repo})
- · 도구 비밀번호: {pw_file.name} (카톡 1:1)
+ · 도구 비밀번호: {pw_file.name} (카톡 1:1) — 글해줌 계정이 생기면 deploy.py login {name} <메일> → 도구 문·관리 화면(/admin) 둘 다 그 로그인
  · 본인 사진이 오면: assets/ 에 넣고 make_og_card.py {u} → 커밋·push (Actions 가 다시 지음)
  · 글해줌 매장 → 홈페이지 연결: 종류 '법인 단지' · 저장소 {repo} (글은 inbox/ 로)
  · 도메인이 오면: config 의 site_url 을 새 주소로 → 커밋·push → Pages 사용자 지정 도메인 연결 → 실주소 audit FAIL 0
@@ -327,10 +351,10 @@ if __name__ == "__main__":
         sys.exit(__doc__)
     if sys.argv[1] == "new":
         sys.exit(new_unit(*sys.argv[2:5]))
-    if sys.argv[1] in ("open", "setup", "login"):
-        if (sys.argv[1] == "open" and len(sys.argv) < 3) or (sys.argv[1] == "login" and len(sys.argv) < 4):
+    if sys.argv[1] in ("open", "setup", "login", "admin"):
+        if (sys.argv[1] in ("open", "admin") and len(sys.argv) < 3) or (sys.argv[1] == "login" and len(sys.argv) < 4):
             sys.exit(__doc__)
-        sys.exit({"open": open_unit, "setup": setup, "login": login}[sys.argv[1]](*sys.argv[2:5]))
+        sys.exit({"open": open_unit, "setup": setup, "login": login, "admin": admin_keys}[sys.argv[1]](*sys.argv[2:5]))
     failed = []
     for u in corp_units(sys.argv[1]):
         cfg = json.loads((u / "config.json").read_text(encoding="utf-8"))

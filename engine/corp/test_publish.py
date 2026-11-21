@@ -147,5 +147,10 @@ adm = (ws / "dist" / "admin.html").read_text(encoding="utf-8")
 assert "const REPO='x/sim'" in adm and "corp_admin_x_sim" in adm and not (ws / "dist" / "admin-demo.json").exists()
 hdr = (ws / "dist" / "_headers").read_text(encoding="utf-8")
 assert "/admin.html\n" in hdr and "X-Robots-Tag: noindex" in hdr and "Disallow: /admin.html" not in (ws / "dist" / "robots.txt").read_text(encoding="utf-8")   # 임시 주소는 전체 Disallow
-print("G 통과 — 관리 화면 글: 걸린 글만 _보류, 정상 글은 올라감 · admin.html 실고객 모드 · 관리 화면 보안 머리글 따로")
+# 들어가기 = 글해줌 로그인(11/21): 일꾼에 저장소 이름이 들어가고, 비밀번호 파일은 없다. 일꾼 자체검사 N(실고객 세대 길)을 여기서 돈다
+wk = (ws / "dist" / "_worker.js").read_text(encoding="utf-8")
+assert "const ADMIN_REPO = 'x/sim'" in wk and "admin-key" not in adm and not (ws / "dist" / "admin-key.json").exists()
+r = sh(ws, "node", str(ws / "_engine" / "engine" / "corp" / "test_tools_gate.mjs"))
+assert r.returncode == 0 and "N 통과 (관리 화면" in r.stdout, r.stdout[-700:] + r.stderr[-700:]
+print("G 통과 — 관리 화면 글: 걸린 글만 _보류, 정상 글은 올라감 · admin.html 실고객 모드 · 관리 화면 보안 머리글 따로 · 일꾼 /admin 글해줌 로그인 문(N)")
 shutil.rmtree(T, ignore_errors=True)

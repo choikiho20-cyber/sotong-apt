@@ -392,6 +392,8 @@ _TFEAT_ART = ('<svg class="tfeat-art" viewBox="0 0 240 180" aria-hidden="true">'
 # Pages 환경변수: TOOLS_API_KEY(글해줌 서버 .env 와 같은 값, secret) · TOOLS_OWNER_EMAIL(이 사이트 주인 계정, 비우면 구독자 누구나) · GEULHAEJUM_URL(기본 https://geulhaejum.kr)
 # 두 모드(11/7 대표님 "당장은 비밀번호 하나로 통일, 팔 때 글해줌 연동" — 11/17 견본 비밀번호를 길게 바꿈, 값은 도구_비밀번호_bizsample.txt): TOOLS_PASSWORD 가 있으면 단순 비밀번호 문(견본·시연용), 없으면 글해줌 로그인 문(판매용).
 # 팔 때는 그 사이트 Pages 에서 TOOLS_PASSWORD 를 지우고 TOOLS_API_KEY·TOOLS_OWNER_EMAIL 을 넣는다.
+# 관리 화면(/admin) 들어가기도 이 문과 같은 글해줌 로그인이다(11/21 대표님 "원래 쓰던 비밀번호로") — 비밀값 GH_APP_ID·GH_APP_KEY(deploy.py admin)로
+# 그 저장소 1시간 열쇠를 발급한다. 아래 admin() 주석.
 WORKER_JS = r"""// 법인영업 홈페이지 — /tools/ 글해줌 구독 문. 나머지 주소는 정적 파일 그대로 (build.py 가 만든다).
 // ponytail: 틀린 비밀번호 횟수 제한은 글해줌 서버 rate_limit(30/시간)에 맡긴다.
 const GATE = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>업무 도구 · 글해줌 로그인</title>
@@ -446,7 +448,7 @@ async function ask(env, email, password) {
   } catch (e) { return { ok: false, reason: '글해줌 서버에 연결할 수 없습니다. 잠시 뒤 다시 시도해 주세요.' }; }
 }
 // 서명에 사이트 주소(host)를 넣는다: 설계사 사이트마다 같은 TOOLS_API_KEY 를 쓰므로, 넣지 않으면 A 사이트 쿠키가 B 사이트에서 통한다 (11/13 보안검토)
-const sign = (env, host, email, day) => sha('corp-tools-v3:' + env.TOOLS_API_KEY + ':' + host + ':' + email + ':' + day);
+const sign = (env, host, email, day, tag = 'corp-tools-v3') => sha(tag + ':' + env.TOOLS_API_KEY + ':' + host + ':' + email + ':' + day);
 const isOwner = (env, email) => !env.TOOLS_OWNER_EMAIL || email === env.TOOLS_OWNER_EMAIL.trim().toLowerCase();
 // 문 화면은 일꾼이 직접 만들어 _headers 가 안 붙는다 → 보안 머리글을 여기서 붙인다(스크립트 없음, 스타일만 안에).
 const GATE_SEC = {
@@ -468,6 +470,61 @@ function failed(ip) {
 }
 const TOO_MANY = '비밀번호를 여러 번 틀려 10분 동안 잠겼습니다. 잠시 뒤 다시 해 주세요.';
 
+// ---- 관리 화면(/admin) 들어가기 = 도구 문과 같은 글해줌 로그인 (11/21 대표님 "원래 쓰던 비밀번호로 계속") ----
+// 비밀번호를 따로 두지 않는다. 글해줌 로그인이 맞고 이 사이트 주인 계정(TOOLS_OWNER_EMAIL — 관리 화면엔 '구독자 누구나'가 없다)이면
+// 글해줌 GitHub 앱(JWT RS256)으로 이 저장소만·contents write 1시간 열쇠를 발급해 화면에 준다. 사람이 만드는 토큰(PAT)·잠긴 열쇠 파일이 없다.
+// 30일 쿠키(admin_auth, Path=/admin, HttpOnly)로는 비밀번호 없이 열쇠만 다시 받고, 날이 바뀌면 구독을 조용히 다시 확인한다(도구 문과 같음).
+// Pages 비밀값: GH_APP_ID · GH_APP_KEY(앱 비밀키 PKCS#8 DER base64 한 줄 — deploy.py admin/login 이 넣음). 견본(ADMIN_REPO 없음)엔 이 문이 없다.
+// 앱 비밀키는 글해줌 서버와 각 세대 Pages 두 곳에 있다 — 새면 GitHub 앱에서 키를 다시 만들고 deploy.py admin all.
+const ADMIN_REPO = '__ADMIN_REPO__';
+const json = (o, status, extra = {}) => new Response(JSON.stringify(o), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...GATE_SEC, ...extra } });
+const b64url = u => btoa(String.fromCharCode(...u)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+async function appToken(env) {
+  const now = Math.floor(Date.now() / 1000), enc = s => b64url(new TextEncoder().encode(s));
+  const head = enc(JSON.stringify({ alg: 'RS256', typ: 'JWT' })) + '.' + enc(JSON.stringify({ iat: now - 60, exp: now + 540, iss: String(env.GH_APP_ID) }));
+  const key = await crypto.subtle.importKey('pkcs8', Uint8Array.from(atob(env.GH_APP_KEY), c => c.charCodeAt(0)), { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+  const jwt = head + '.' + b64url(new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(head))));
+  const H = { Authorization: 'Bearer ' + jwt, Accept: 'application/vnd.github+json', 'User-Agent': 'sotong-apt-admin', 'X-GitHub-Api-Version': '2022-11-28' };
+  const inst = await (await fetch(`https://api.github.com/repos/${ADMIN_REPO}/installation`, { headers: H })).json().catch(() => ({}));
+  if (!inst.id) throw new Error('이 홈페이지에 글해줌 앱이 아직 연결되지 않았습니다. 운영자에게 문의하세요.');
+  const r = await fetch(`https://api.github.com/app/installations/${inst.id}/access_tokens`, { method: 'POST', headers: H,
+    body: JSON.stringify({ repositories: [ADMIN_REPO.split('/')[1]], permissions: { contents: 'write' } }) });
+  const j = await r.json().catch(() => ({}));
+  if (!j.token) throw new Error('홈페이지 열쇠를 받지 못했습니다(' + r.status + '). 잠시 뒤 다시 해 주세요.');
+  return { token: j.token, exp: j.expires_at };
+}
+const acookie = (email, day, sig, age = 2592000) => `admin_auth=${encodeURIComponent(email)}|${day}|${sig}; Path=/admin; Max-Age=${age}; HttpOnly; Secure; SameSite=Strict`;
+async function admin(request, env, url, ip) {
+  if (!ADMIN_REPO) return json({ reason: '견본에는 관리 화면 로그인이 없습니다.' }, 404);
+  if (request.method !== 'POST') return json({ reason: 'POST' }, 405);
+  const sfs = request.headers.get('Sec-Fetch-Site');
+  if (sfs && sfs !== 'same-origin') return json({ reason: '다른 사이트에서는 들어올 수 없습니다.' }, 403);
+  if (url.pathname === '/admin/logout') return json({ ok: true }, 200, { 'Set-Cookie': acookie('', 0, '', 0) });
+  if (!env.TOOLS_OWNER_EMAIL) return json({ reason: '이 홈페이지에 연결된 글해줌 계정이 아직 지정되지 않았습니다. 운영자에게 문의하세요.' }, 401);
+  if (!env.GH_APP_ID || !env.GH_APP_KEY) return json({ reason: '설정이 아직 안 됐습니다(GH_APP_KEY). 운영자에게 문의하세요.' }, 401);
+  let email;
+  if (url.pathname === '/admin/login') {
+    if (blocked(ip)) return json({ reason: TOO_MANY }, 429);
+    const b = await request.json().catch(() => ({}));
+    email = String(b.email || '').trim().toLowerCase();
+    const pw = String(b.pw || '');
+    if (!email || !pw) return json({ reason: '이메일과 비밀번호를 넣어 주세요.' }, 401);
+    const v = await ask(env, email, pw);
+    if (!v.ok) { failed(ip); return json({ reason: v.reason }, 401); }
+  } else if (url.pathname === '/admin/token') {   // 30일 쿠키로 열쇠만 재발급 — 날이 바뀌면 구독을 조용히 다시 확인
+    const m = (request.headers.get('Cookie') || '').match(/(?:^|;\s*)admin_auth=([^|;]+)\|(\d+)\|([a-f0-9]+)/);
+    if (!m) return json({ reason: '다시 들어가 주세요.' }, 401);
+    email = decodeURIComponent(m[1]);
+    const day = +m[2];
+    if (!isOwner(env, email) || m[3] !== await sign(env, url.host, email, day, 'corp-admin-v1')) return json({ reason: '다시 들어가 주세요.' }, 401);
+    if (day !== today()) { const v = await ask(env, email, ''); if (!v.ok) return json({ reason: v.reason }, 401); }
+  } else return json({ reason: '없는 주소' }, 404);
+  try {
+    const t = await appToken(env);
+    return json(t, 200, { 'Set-Cookie': acookie(email, today(), await sign(env, url.host, email, today(), 'corp-admin-v1')) });
+  } catch (e) { return json({ reason: e.message }, 502); }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -477,8 +534,9 @@ export default {
     // 검색엔진엔 주소가 하나. 배포마다 생기는 미리보기 주소(<해시>.<프로젝트>.pages.dev)는 그대로. HOME 은 build.py 가 정식 주소일 때만 채운다.
     const HOME = '__HOME__';
     if (HOME && /^[^.]+\.pages\.dev$/.test(url.hostname)) { url.hostname = HOME; return Response.redirect(url.toString(), 301); }
-    if (!url.pathname.startsWith('/tools')) return env.ASSETS.fetch(request);
     const ip = request.headers.get('CF-Connecting-IP') || 'local';
+    if (url.pathname.startsWith('/admin/')) return admin(request, env, url, ip);   // 관리 화면 들어가기(위 admin 주석) — /admin 화면 자체는 정적 파일
+    if (!url.pathname.startsWith('/tools')) return env.ASSETS.fetch(request);
     if (env.TOOLS_TRIAL_SECRET) {                       // 무료 체험 세대(위 trialGate 주석). 정식·견본 세대엔 이 비밀값이 없다.
       const tok = await sha('corp-trial-v1:' + env.TOOLS_TRIAL_SECRET + ':' + url.host);
       if (url.pathname === '/tools/enter') {
@@ -659,20 +717,24 @@ def write_sec_headers(cfg):
         admin=("admin.html",), admin_connect=track.group(0) if track else "")   # 관리 화면은 GitHub API·문의 서버만(경로별 예외)
 
 
+def admin_repo_of(cfg):
+    """관리 화면·일꾼의 자바스크립트 문자열에 들어가는 저장소 이름(owner/name) — 모양을 좁혀 코드로 번지지 않게."""
+    repo = (cfg.get("admin_repo") or "").strip()
+    if repo and not re.fullmatch(r"[\w.-]+/[\w.-]+", repo):
+        sys.exit(f"config admin_repo 는 owner/name 모양이어야 합니다: {repo}")
+    return repo
+
+
 def write_admin(cfg, site):
     """사장님 셀프 관리 화면(11/21, 자동차 단지 것을 법인에 맞춤). admin_repo 가 비어 있으면(판매 전 견본) 저장 안 되는 '견본 모드'.
-    값만 바꾼다(config.json·content/*.md·assets/) — 화면은 그 저장소의 Actions 가 다시 짓는다."""
-    repo = (cfg.get("admin_repo") or "").strip()
+    값만 바꾼다(config.json·content/*.md·assets/) — 화면은 그 저장소의 Actions 가 다시 짓는다.
+    들어가기는 _worker.js 의 /admin/login(글해줌 로그인) — 비밀번호 파일(admin-key.json)은 없다(11/21)."""
+    repo = admin_repo_of(cfg)
     (DIST / "admin.html").write_text(render((ENGINE / "templates" / "admin.html").read_text(encoding="utf-8"), {
         "name": html.escape(cfg["name"]), "site": site, "track": (cfg.get("track_url") or "").rstrip("/"),
         "repo": repo, "branch": cfg.get("admin_branch", "main"),
         "key": "corp_admin_" + re.sub(r"\W", "_", repo or site),
     }), encoding="utf-8")
-    if repo:   # 토큰을 비밀번호로 잠근 파일. 아직 없으면 빈 것을 둔다 — 404 콘솔 오류 없이 '비밀번호 미정' 안내가 뜨게
-        if (ROOT / "admin-key.json").exists():
-            shutil.copy2(ROOT / "admin-key.json", DIST / "admin-key.json")
-        else:
-            (DIST / "admin-key.json").write_text("{}", encoding="utf-8")
     if not repo:
         keys = ("name", "region", "eyebrow", "tagline", "intro", "phone", "kakao_url", "channels", "hero_image")
         (DIST / "admin-demo.json").write_text(json.dumps({k: cfg.get(k) for k in keys}, ensure_ascii=False), encoding="utf-8")
@@ -1056,7 +1118,8 @@ def main():
     staging = any(h in site for h in ("pages.dev", "netlify.app", "vercel.app", "github.io", "example.com"))
     # /tools/ 글해줌 구독 문 — Cloudflare Pages 가 dist/_worker.js 를 먼저 태운다. 설정은 WORKER_JS 위 주석.
     (DIST / "_worker.js").write_text(
-        WORKER_JS.replace("__HOME__", "" if staging else re.sub(r"^https?://", "", site).split("/")[0]), encoding="utf-8")
+        WORKER_JS.replace("__HOME__", "" if staging else re.sub(r"^https?://", "", site).split("/")[0])
+        .replace("__ADMIN_REPO__", admin_repo_of(cfg)), encoding="utf-8")
 
     # SEO: sitemap + robots (발행 시마다 자동 갱신)
     # Cloudflare Pages는 .html 주소를 확장자 없는 주소로 308 넘긴다. 검색엔진에는 최종 주소를 알려야 한다.
