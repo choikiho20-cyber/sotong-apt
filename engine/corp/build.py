@@ -668,8 +668,11 @@ def write_admin(cfg, site):
         "repo": repo, "branch": cfg.get("admin_branch", "main"),
         "key": "corp_admin_" + re.sub(r"\W", "_", repo or site),
     }), encoding="utf-8")
-    if repo and (ROOT / "admin-key.json").exists():   # 토큰을 비밀번호로 잠근 파일
-        shutil.copy2(ROOT / "admin-key.json", DIST / "admin-key.json")
+    if repo:   # 토큰을 비밀번호로 잠근 파일. 아직 없으면 빈 것을 둔다 — 404 콘솔 오류 없이 '비밀번호 미정' 안내가 뜨게
+        if (ROOT / "admin-key.json").exists():
+            shutil.copy2(ROOT / "admin-key.json", DIST / "admin-key.json")
+        else:
+            (DIST / "admin-key.json").write_text("{}", encoding="utf-8")
     if not repo:
         keys = ("name", "region", "eyebrow", "tagline", "intro", "phone", "kakao_url", "channels", "hero_image")
         (DIST / "admin-demo.json").write_text(json.dumps({k: cfg.get(k) for k in keys}, ensure_ascii=False), encoding="utf-8")

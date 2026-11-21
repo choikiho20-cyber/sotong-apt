@@ -54,9 +54,10 @@ def write(dist, *, script="", style="", font="", connect="", frame="", media="",
         sys.exit(f"보안 머리글 CSP 가 {len(csp)}자 — 페이지 안 스크립트를 파일로 빼서 지문 수를 줄일 것")
     out = f"/*\n{COMMON}  Content-Security-Policy: {csp}\n"
     if adm:
-        admin_csp = ("default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' " + style + "; "
+        # static.cloudflareinsights.com: Pages 방문 통계가 관리 화면에도 beacon 을 끼워 넣는다 — 막히면 콘솔 오류(문진 11/21)
+        admin_csp = ("default-src 'none'; script-src 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'unsafe-inline' " + style + "; "
                      "font-src " + (font or "'self'") + "; img-src 'self' blob: data:; "
-                     f"connect-src 'self' https://api.github.com {admin_connect}".strip() + "; "
+                     f"connect-src 'self' https://api.github.com https://cloudflareinsights.com {admin_connect}".strip() + "; "
                      "base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
         rule = (f"  ! Content-Security-Policy\n  Content-Security-Policy: {admin_csp}\n"
                 "  Cache-Control: no-store\n  X-Robots-Tag: noindex, nofollow, noarchive\n")

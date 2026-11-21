@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' blob: data: {{site}}; connect-src 'self' https://api.github.com {{track}}; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'unsafe-inline'; img-src 'self' blob: data: {{site}}; connect-src 'self' https://api.github.com https://cloudflareinsights.com {{track}}; base-uri 'none'; form-action 'none'">
+<link rel="icon" href="favicon.svg">
 <title>관리 · {{name}}</title>
 <style>
 :root{--paper:#f3f3f1;--ink:#16181b;--ink2:#474b52;--stone:#6d7178;--line:rgba(22,24,27,.15);--pt:#1f3a5f;--pt-h:#162b47;--bad:#B3261E;--good:#2E7D4F;
@@ -226,7 +227,8 @@ function open(name){
 }
 document.addEventListener('input',e=>{if(e.target.closest('#sec-profile,#postEd'))dirty=true});
 
-/* ── 문의함 ── */
+/* ── 문의함 ── 본인 확인에 GitHub 열쇠를 우리 문의 서버(car-track, https)에 보인다 — 서버는 저장 없이 '이 저장소에 쓸 수 있나'만 묻는다(자동차 단지와 같은 방식).
+   ponytail: 문의함 전용 열쇠로 나누는 것은 car-track KV 개편 때(open 이 site:<호스트> 에 inbox_key 를 심고 admin-key.json 에 같이 잠금) */
 async function inbox(method='GET',body){
   if(DEMO) return demoInbox();
   const r=await fetch(`${TRACK}/inbox?site=${encodeURIComponent(HOST)}`,{method,headers:{Authorization:'Bearer '+token(),'Content-Type':'text/plain'},body:body&&JSON.stringify(body)});
