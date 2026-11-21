@@ -655,7 +655,24 @@ def write_sec_headers(cfg):
         DIST, script=SEC_SCRIPT, wasm=True, worker=True, media="blob: data:",
         frame="https://www.youtube-nocookie.com",   # 따라 하기 영상 창(법인도구/web/howto.js, 11/18)
         style="https://fonts.googleapis.com https://cdn.jsdelivr.net", font="data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
-        connect="blob: data: " + SEC_CONNECT + (" " + track.group(0) if track else ""))
+        connect="blob: data: " + SEC_CONNECT + (" " + track.group(0) if track else ""),
+        admin=("admin.html",), admin_connect=track.group(0) if track else "")   # 관리 화면은 GitHub API·문의 서버만(경로별 예외)
+
+
+def write_admin(cfg, site):
+    """사장님 셀프 관리 화면(11/21, 자동차 단지 것을 법인에 맞춤). admin_repo 가 비어 있으면(판매 전 견본) 저장 안 되는 '견본 모드'.
+    값만 바꾼다(config.json·content/*.md·assets/) — 화면은 그 저장소의 Actions 가 다시 짓는다."""
+    repo = (cfg.get("admin_repo") or "").strip()
+    (DIST / "admin.html").write_text(render((ENGINE / "templates" / "admin.html").read_text(encoding="utf-8"), {
+        "name": html.escape(cfg["name"]), "site": site, "track": (cfg.get("track_url") or "").rstrip("/"),
+        "repo": repo, "branch": cfg.get("admin_branch", "main"),
+        "key": "corp_admin_" + re.sub(r"\W", "_", repo or site),
+    }), encoding="utf-8")
+    if repo and (ROOT / "admin-key.json").exists():   # 토큰을 비밀번호로 잠근 파일
+        shutil.copy2(ROOT / "admin-key.json", DIST / "admin-key.json")
+    if not repo:
+        keys = ("name", "region", "eyebrow", "tagline", "intro", "phone", "kakao_url", "channels", "hero_image")
+        (DIST / "admin-demo.json").write_text(json.dumps({k: cfg.get(k) for k in keys}, ensure_ascii=False), encoding="utf-8")
 
 
 def render(template, mapping):
@@ -1055,7 +1072,7 @@ def main():
             "User-agent: *\nDisallow: /\n", encoding="utf-8")
     else:
         (DIST / "robots.txt").write_text(
-            f"User-agent: *\nAllow: /\nDisallow: /tools/\nSitemap: {site}/sitemap.xml\n"
+            f"User-agent: *\nAllow: /\nDisallow: /tools/\nDisallow: /admin.html\nSitemap: {site}/sitemap.xml\n"
             + (f"#DaumWebMasterTool:{cfg['daum_verification']}\n" if cfg.get("daum_verification") else ""),  # 다음 웹마스터도구 소유 확인
             encoding="utf-8")
 
@@ -1083,8 +1100,9 @@ def main():
                 p.write_text(h.replace("</head>", '<script src="/tools/trial.js"></script></head>', 1), encoding="utf-8")
                 n_trial += 1
         print(f"무료 체험판: 도구 {n_trial}쪽에 체험판 표시·2건 제한")
+    write_admin(cfg, site)
     n_js, n_on = write_sec_headers(cfg)   # dist 를 다 지은 뒤 마지막에 — 페이지 안 코드 지문을 떠야 하므로
-    print(f"보안 머리글: dist/_headers (페이지 안 스크립트 {n_js}개·인라인 이벤트 {n_on}개 지문 허용)")
+    print(f"보안 머리글: dist/_headers (페이지 안 스크립트 {n_js}개·인라인 이벤트 {n_on}개 지문 허용, 관리 화면 따로)")
 
     if not cfg["track_url"]:
         print("[경고] track_url이 비어 있어 문의 추적이 꺼진 상태로 빌드됨 (지시서 6장: 추적 없으면 3개월 안에 이탈)")

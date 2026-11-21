@@ -113,7 +113,7 @@ def check_unit(u):
     """올리기 전 세대 데이터 검사 — 세대 저장소는 고객 관리 화면 열쇠·글해줌 앱이 쓸 수 있다(11/20 보안 검토).
     엔진은 설정·글을 걸러내지 않고 화면에 찍고, 보안 머리글은 페이지 안 스크립트·on…= 지문을 허용하며, 사진·카드는 경로대로 복사한다.
     그래서 데이터 칸이 코드나 비밀 파일로 번지는 길을 여기서 막는다. 문제 목록을 돌려준다(비면 통과). 기존 세대 6곳은 전부 통과."""
-    from publish import SAFE_HREF
+    from publish import SAFE_HREF, post_problems
     bad = [f"바로가기(심볼릭 링크) {p.relative_to(u)}" for p in u.rglob("*")
            if p.is_symlink() and p.relative_to(u).parts[0] not in ("_engine", "법인도구", ".git", "dist")]
     cfg = json.loads((u / "config.json").read_text(encoding="utf-8"))
@@ -134,11 +134,7 @@ def check_unit(u):
     if not og.is_relative_to((u / "assets").resolve()) or og.suffix.lower() not in (".jpg", ".jpeg", ".png", ".webp"):
         bad.append("config og_image 는 assets/ 안 사진(jpg·png·webp)만")
     for md in sorted((u / "content").glob("*.md")):
-        t = md.read_text(encoding="utf-8")
-        head = t.split("\n---", 1)[0] if t.startswith("---") else ""
-        if "<" in t or '"' in head:
-            bad.append(f"content/{md.name}: 태그(<) 또는 머리말 따옴표")
-        bad += [f"content/{md.name}: 링크 {h[:40]}" for h in re.findall(r"\]\(([^)]*)\)", t) if not SAFE_HREF.fullmatch(h)]
+        bad += [f"content/{md.name}: {x}" for x in post_problems(md)]
     return bad
 
 

@@ -70,14 +70,32 @@ def add(d):
     path = ROOT / "content" / name
     path.write_text(f"---\ntitle: {title}\ndescription: {summary}\ndate: {today}\nkeywords: {keywords}\n---\n\n{body}\n",
                     encoding="utf-8")
+    return ("보류", name) if hold_if_bad(path) else ("발행", name)
+
+
+def post_problems(path):
+    """글 한 편의 데이터 문제(태그·머리말 따옴표·위험한 링크). deploy.check_unit 도 이걸 쓴다 — 기준은 한 곳."""
+    t = path.read_text(encoding="utf-8")
+    head = t.split("\n---", 1)[0] if t.startswith("---") else ""
+    bad = []
+    if "<" in t or '"' in head:
+        bad.append("태그(<) 또는 머리말 따옴표")
+    bad += [f"링크 {h[:40]}" for h in re.findall(r"\]\(([^)]*)\)", t) if not SAFE_HREF.fullmatch(h)]
+    return bad
+
+
+def hold_if_bad(path):
+    """심의 자동점검·데이터 검사에 걸린 글은 _보류/ 로 빼고 점검표를 옆에 둔다. 걸렸으면 True.
+    관리 화면에서 사장님이 쓴 글도 여기로 걸러진다 — 한 편이 걸려도 다른 글·홈페이지는 계속 올라가게(빌드를 막지 않게)."""
     checklist, ok = build.compliance_check([build.parse_post(path)], {})
-    if ok:
-        return "발행", name
+    data = post_problems(path)
+    if ok and not data:
+        return False
     hold = ROOT / "_보류"
     hold.mkdir(exist_ok=True)
-    shutil.move(str(path), hold / name)
-    (hold / f"{name}.점검.txt").write_text(checklist, encoding="utf-8")
-    return "보류", name
+    shutil.move(str(path), hold / path.name)
+    (hold / f"{path.name}.점검.txt").write_text(checklist + ("\n[X] 데이터 검사: " + " · ".join(data) if data else ""), encoding="utf-8")
+    return True
 
 
 def git(*args):
@@ -102,6 +120,10 @@ def run_inbox():
         except (ValueError, AttributeError) as e:
             results.append((f.name, "거절", f"글 파일을 읽지 못함: {e}"))
         f.unlink()
+    # 관리 화면(사장님)이 저장소에 직접 쓴 글도 같은 점검을 거친다 — 걸린 글 하나가 전체 빌드를 막지 않게 _보류/ 로
+    for p in sorted((ROOT / "content").glob("*.md")):
+        if hold_if_bad(p):
+            results.append((f"content/{p.name}", "보류", "관리 화면 글 — 점검에 걸림"))
     for src, state, what in results:
         print(f"[{state}] {src} → {what}")
     if not results:
@@ -109,7 +131,7 @@ def run_inbox():
         return 0
     titles = ", ".join(w for _, s, w in results if s == "발행")
     git("add", "-A", "inbox", "content", *(["_보류"] if (ROOT / "_보류").exists() else []))
-    ok, out = git("commit", "-m", f"글해줌: 새 글 {len(results)}편 정리 — {titles or '발행 없음'}")
+    ok, out = git("commit", "-m", f"글해줌: 글 {len(results)}편 정리 — {titles or '발행 없음'}")
     for _ in range(3):
         if not ok:
             break

@@ -132,4 +132,20 @@ assert r.returncode == 0, r.stdout[-400:] + r.stderr[-300:]
 page = (ws / "dist" / "posts" / f"{today}-3.html").read_text(encoding="utf-8")
 assert "javascript:" not in page and "클릭" in page and 'href="https://law.go.kr/법령/상법"' in page and '"따옴표"' not in page
 print(f"F 통과 — 링크 속성 깨기·머리말 따옴표·태그·og_image 밖 경로·도구 원본 경로·설정 주소 javascript:·문자 참조 우회·{link}거부, inbox 의 javascript: 링크는 글자로")
+
+# G 관리 화면(사장님)이 저장소에 직접 쓴 글: 심의에 걸리면 _보류 로 빠지고 나머지는 계속 올라간다 · 관리 화면 파일이 지어진다
+(ws / "content" / "post-admin-bad.md").write_text(f"---\ntitle: 절세 컨설팅 해 드립니다\ndescription: x\ndate: {today}\n---\n\n{body}\n", encoding="utf-8")
+(ws / "content" / "post-admin-ok.md").write_text(f"---\ntitle: 정관 지급 규정 점검 순서\ndescription: 임원 퇴직금 규정 확인\ndate: {today}\nkeywords: 정관\n---\n\n## 순서\n\n{body}\n", encoding="utf-8")
+git(ws, "add", "-A"); git(ws, "commit", "-m", "관리 화면: 글 2편"); git(ws, "push")
+r = sh(ws, sys.executable, "-I", "-X", "utf8", "_engine/engine/corp/publish.py", "--inbox", "--unit", ".")
+assert r.returncode == 1 and "post-admin-bad.md" in r.stdout and "보류" in r.stdout, r.stdout[-300:]
+assert (ws / "_보류" / "post-admin-bad.md").exists() and (ws / "content" / "post-admin-ok.md").exists()
+r = sh(ws, sys.executable, "-I", "-X", "utf8", "_engine/engine/corp/deploy.py", ".", env=env)
+assert r.returncode == 0, r.stdout[-400:] + r.stderr[-300:]
+assert (ws / "dist" / "posts" / "post-admin-ok.html").exists() and not (ws / "dist" / "posts" / "post-admin-bad.html").exists()
+adm = (ws / "dist" / "admin.html").read_text(encoding="utf-8")
+assert "const REPO='x/sim'" in adm and "corp_admin_x_sim" in adm and not (ws / "dist" / "admin-demo.json").exists()
+hdr = (ws / "dist" / "_headers").read_text(encoding="utf-8")
+assert "/admin.html\n" in hdr and "X-Robots-Tag: noindex" in hdr and "Disallow: /admin.html" not in (ws / "dist" / "robots.txt").read_text(encoding="utf-8")   # 임시 주소는 전체 Disallow
+print("G 통과 — 관리 화면 글: 걸린 글만 _보류, 정상 글은 올라감 · admin.html 실고객 모드 · 관리 화면 보안 머리글 따로")
 shutil.rmtree(T, ignore_errors=True)
