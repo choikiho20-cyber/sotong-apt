@@ -14,8 +14,25 @@
 .mx .eyebrow::before { content: ""; width: 0; height: 1px; background: var(--gold); transition: width .9s cubic-bezier(.16, 1, .3, 1); }
 .mx .eyebrow.in::before { width: 34px; }
 
-/* ---------- 첫 화면 ---------- */
-.mx .hero-media { overflow: hidden; }
+/* ---------- 첫 화면 — 고급차 사이트식 영화 오프닝 (11/24) ----------
+   가운데서 문이 열리듯 사진이 펼쳐지고(clip-path), 크게 당겨져 있던 사진이 천천히 제자리로 물러난 뒤
+   켄 번스로 이어진다. 마우스를 움직이면 사진이 살짝 따라와 깊이가 생긴다(motion.js). */
+.mx .hero-media { overflow: hidden; clip-path: inset(0 50% 0 50%); transition: clip-path 1.9s cubic-bezier(.77, 0, .18, 1) .05s; }
+.mx .hero.on .hero-media { clip-path: inset(0 0 0 0); }
+.mx .hero-media img { animation: mx-open 3.4s cubic-bezier(.16, 1, .3, 1) both, kenburns 26s ease-out 3.4s forwards; }
+@keyframes mx-open { from { transform: scale(1.24); } to { transform: scale(1); } }
+/* 실적 한 줄 앞에 금색 선이 그어지고, 첫 화면 바닥에 금빛 실선이 가운데서 양쪽으로 번진다 */
+.mx header.hero .hero-claim { display: flex; align-items: center; gap: 14px; }
+.mx header.hero .hero-claim::before { content: ""; width: 0; height: 1px; background: var(--gold); transition: width 1.2s cubic-bezier(.16, 1, .3, 1) .9s; }
+.mx header.hero.on .hero-claim::before { width: 48px; }
+.mx header.hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; z-index: 2;
+  background: linear-gradient(90deg, transparent, var(--gold) 50%, transparent); transform: scaleX(0); transition: transform 2.4s cubic-bezier(.16, 1, .3, 1) 1.4s; }
+.mx header.hero.on::after { transform: scaleX(1); }
+/* SCROLL 아래로 금빛 선이 떨어진다 */
+.mx .scroll-hint::after { content: ""; position: absolute; left: 50%; top: 100%; margin-top: 14px; width: 1px; height: 64px;
+  background: linear-gradient(var(--gold), transparent); animation: mx-drop 2.4s cubic-bezier(.65, 0, .35, 1) infinite; }
+@keyframes mx-drop { 0% { transform: scaleY(0); transform-origin: 50% 0; } 50% { transform: scaleY(1); transform-origin: 50% 0; }
+  50.1% { transform: scaleY(1); transform-origin: 50% 100%; } 100% { transform: scaleY(0); transform-origin: 50% 100%; } }
 /* 사진 위를 한 번 쓸고 지나가는 빛 — 9초마다 다시 */
 .mx .hero-media::after {
   content: ""; position: absolute; inset: -20% -60%; pointer-events: none; z-index: 1;
@@ -143,3 +160,20 @@
 @keyframes mx-rise { from { transform: translateY(100%); } to { transform: none; } }
 
 /* 모션 최소화(.mx-still)면 .mx 규칙이 하나도 안 붙어 처음부터 다 보인다 */
+
+/* ---------- 차종 이름 띠: 큰 글씨가 끝없이 흐른다 (차종 칸 머리, motion.js 가 차종 이름으로 만든다) ---------- */
+.mx-marquee { overflow: hidden; padding: clamp(26px, 4vw, 46px) 0; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+.mx-track { display: flex; width: max-content; animation: mx-marq 55s linear infinite; }
+.mx-marquee:hover .mx-track { animation-play-state: paused; }
+.mx-track span { font-family: var(--en); font-size: clamp(42px, 8vw, 116px); font-weight: 700; line-height: 1.05; letter-spacing: -.02em;
+  white-space: nowrap; padding-right: .55em; color: color-mix(in srgb, var(--text) 13%, transparent); }
+/* 외곽선 글씨는 한글 가변 글꼴의 겹친 획 선이 비쳐 지저분하다 → 옅은 채움 + 금색 번갈아 */
+.mx-track .g { color: var(--gold); }
+@keyframes mx-marq { to { transform: translateX(-50%); } }
+
+/* ---------- 금빛 커서 고리 (마우스 화면만): 버튼·차종 카드 위에서 커진다 ---------- */
+.mx-cursor { position: fixed; left: 0; top: 0; z-index: 90; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%;
+  border: 1px solid var(--gold); pointer-events: none; opacity: 0;
+  transition: width .35s cubic-bezier(.16, 1, .3, 1), height .35s cubic-bezier(.16, 1, .3, 1), margin .35s cubic-bezier(.16, 1, .3, 1), background .3s, opacity .3s; }
+.mx-cursor.on { opacity: 1; }
+.mx-cursor.big { width: 78px; height: 78px; margin: -39px 0 0 -39px; background: color-mix(in srgb, var(--gold) 14%, transparent); }

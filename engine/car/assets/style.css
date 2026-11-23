@@ -120,10 +120,22 @@ img, video { display: block; max-width: 100%; }
 .hero { position: relative; min-height: 100svh; display: flex; align-items: flex-end; overflow: hidden; }
 .hero-media { position: absolute; inset: 0; }
 .hero-media img, .hero-media video { width: 100%; height: 100%; object-fit: cover; object-position: 66% 22%; /* 인물이 오른쪽에 선 구도 기준. 얼굴이 위쪽이라 세로도 올림 */ }
+/* 11/24 대표님 "너무 흐리다" → 사진 전체를 덮던 막을 걷고, 글씨가 놓이는 자리(폰=아래, PC=왼쪽)에만 바탕색을 깐다.
+   사진의 색은 그대로 살고 글씨는 읽힌다. color-mix 를 모르는 옛 브라우저는 첫 줄(옛 막)로 떨어진다. */
 .hero-media::before {
   content: ""; position: absolute; inset: 0; z-index: 1;
   background: linear-gradient(to top, var(--bg) 2%, var(--scrim-strong) 38%, var(--scrim-soft) 100%);
+  background: linear-gradient(to top, var(--bg) 4%, color-mix(in srgb, var(--bg) 82%, transparent) 32%, transparent 62%);
 }
+@media (min-width: 900px) {
+  .hero-media::before {
+    background:
+      linear-gradient(to top, var(--bg) 0%, transparent 16%),
+      linear-gradient(90deg, color-mix(in srgb, var(--bg) 70%, transparent) 0%, color-mix(in srgb, var(--bg) 34%, transparent) 34%, transparent 56%);
+  }
+}
+/* 사진 색을 한 단계 또렷하게 — 흰 전시장 사진이 바탕색에 묻히지 않게 */
+.hero-media img, .feature-media img, .model img { filter: saturate(1.14) contrast(1.06); }
 .hero-inner { position: relative; z-index: 2; width: 100%; padding-bottom: clamp(56px, 9vw, 104px); }
 .hero-claim {
   font-family: var(--en); font-size: clamp(13px, 1.6vw, 17px); font-weight: 500;
@@ -188,6 +200,7 @@ img, video { display: block; max-width: 100%; }
 .feature-media::before {
   content: ""; position: absolute; inset: 0; z-index: 1;
   background: linear-gradient(to top, var(--bg) 0%, var(--scrim-strong) 45%, transparent 85%);
+  background: linear-gradient(to top, var(--bg) 2%, color-mix(in srgb, var(--bg) 78%, transparent) 30%, transparent 58%);
 }
 .feature-inner { position: relative; z-index: 2; width: 100%; padding-bottom: clamp(48px, 7vw, 88px); }
 .feature-name { font-size: clamp(40px, 8vw, 96px); font-weight: 800; letter-spacing: -.04em; line-height: .95; }
@@ -232,7 +245,7 @@ button.btn { background: transparent; color: inherit; font: inherit; cursor: poi
 .model img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
 .model::before {
   content: ""; position: absolute; inset: 0; z-index: 1;
-  background: linear-gradient(to top, var(--scrim-card) 0%, transparent 62%);
+  background: linear-gradient(to top, var(--scrim-card) 0%, transparent 42%);
 }
 .model-info { position: relative; z-index: 2; padding: 18px 16px; width: 100%; }
 .model-name {

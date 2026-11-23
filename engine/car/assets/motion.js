@@ -58,6 +58,53 @@
     dust(hero);
   }
 
+  // 마우스를 따라 첫 화면 사진이 살짝 움직인다(깊이감) — 마우스 화면만. 살짝 키워 둬서 가장자리가 안 보인다
+  var media = hero && hero.querySelector('.hero-media');
+  if (media && fine) {
+    var tx = 0, ty = 0, cx = 0, cy = 0, moving = false;
+    media.style.transform = 'scale(1.04)';
+    hero.addEventListener('mousemove', function (e) {
+      tx = (e.clientX / innerWidth - .5) * -24; ty = (e.clientY / innerHeight - .5) * -14;
+      if (!moving) { moving = true; requestAnimationFrame(follow); }
+    });
+    var follow = function () {
+      cx += (tx - cx) * .06; cy += (ty - cy) * .06;
+      media.style.transform = 'translate3d(' + cx.toFixed(2) + 'px,' + cy.toFixed(2) + 'px,0) scale(1.04)';
+      if (Math.abs(tx - cx) + Math.abs(ty - cy) > .05) requestAnimationFrame(follow); else moving = false;
+    };
+  }
+
+  // ── 차종 이름 띠: 차종 칸 머리에 큰 이름이 끝없이 흐른다 (장식이라 읽기 도구에는 숨김 — 이름은 카드에 그대로 있다)
+  var models = document.getElementById('models');
+  var names = Array.prototype.map.call(document.querySelectorAll('.model[data-model]'), function (m) { return m.getAttribute('data-model'); });
+  if (models && names.length) {
+    var row = names.map(function (n, i) { return '<span' + (i % 2 ? '' : ' class="g"') + '>' + esc(n) + '</span>'; }).join('');
+    var band = document.createElement('div');
+    band.className = 'mx-marquee'; band.setAttribute('aria-hidden', 'true');
+    band.innerHTML = '<div class="mx-track">' + row + row + '</div>';   // 두 벌 이어 붙여 -50% 에서 이음매 없이 돈다
+    models.parentNode.insertBefore(band, models);
+  }
+
+  // ── 금빛 커서 고리 (마우스 화면만): 누를 수 있는 것 위에서 커진다
+  if (fine) {
+    var cur = document.createElement('i');
+    cur.className = 'mx-cursor'; cur.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(cur);
+    var mX = 0, mY = 0, pX = 0, pY = 0, chasing = false;
+    addEventListener('mousemove', function (e) {
+      mX = e.clientX; mY = e.clientY;
+      if (!cur.classList.contains('on')) { pX = mX; pY = mY; cur.classList.add('on'); }
+      cur.classList.toggle('big', !!(e.target.closest && e.target.closest('a, button, .model, summary')));
+      if (!chasing) { chasing = true; requestAnimationFrame(chase); }
+    }, { passive: true });
+    document.documentElement.addEventListener('mouseleave', function () { cur.classList.remove('on'); });
+    var chase = function () {
+      pX += (mX - pX) * .2; pY += (mY - pY) * .2;
+      cur.style.transform = 'translate3d(' + pX.toFixed(1) + 'px,' + pY.toFixed(1) + 'px,0)';
+      if (Math.abs(mX - pX) + Math.abs(mY - pY) > .1) requestAnimationFrame(chase); else chasing = false;
+    };
+  }
+
   function dust(host) {
     var cv = document.createElement('canvas');
     cv.className = 'hero-dust';
