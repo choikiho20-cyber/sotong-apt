@@ -645,7 +645,7 @@ def main():
         "name": cfg["name"],
         "theme": theme,
         # 모바일 브라우저 주소창까지 페이지 색으로 물들인다 (명함으로 열었을 때 첫인상)
-        "theme_color": "#ffffff" if theme == "bright" else "#0a0b0d",
+        "theme_color": "#fbfaf7" if theme == "bright" else "#0a0b0d",
         "brand": cfg.get("brand", ""),
         "dealership": dealership,
         "dealership_phone": cfg.get("dealership_phone", ""),

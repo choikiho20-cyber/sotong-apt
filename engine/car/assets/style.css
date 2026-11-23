@@ -31,18 +31,20 @@
 
 /* 밝은 테마 (현대·기아 대중 라인용). config의 theme으로 붙는다 */
 [data-theme="bright"] {
-  --bg: #ffffff;
-  --surface: #f2f4f6;
-  --surface-2: #e8ebee;
-  --text: #101317;
-  --mute: #5f666e;
-  --line: rgba(16, 19, 23, .16);
-  --line-soft: rgba(16, 19, 23, .08);
-  --gold: #8a6d1f;
+  /* 11/23 대표님 "어두워서 침침하다" → 견본 전부 밝은 판. 흰색 대신 따뜻한 상아색 바탕,
+     금색은 채도 낮춘 샴페인 골드(리조트급 원칙: 쨍한 원색 금지). 사진 위 흰 막은 옅게 해 사진이 살아 보이게. */
+  --bg: #fbfaf7;
+  --surface: #f3f0ea;
+  --surface-2: #e9e4da;
+  --text: #15171b;
+  --mute: #5d6168;
+  --line: rgba(21, 23, 27, .15);
+  --line-soft: rgba(21, 23, 27, .07);
+  --gold: #9a7a2c;
   --on-solid: #ffffff;
-  --scrim-strong: rgba(255, 255, 255, .86);
-  --scrim-soft: rgba(255, 255, 255, .42);
-  --scrim-card: rgba(255, 255, 255, .94);
+  --scrim-strong: rgba(251, 250, 247, .78);
+  --scrim-soft: rgba(251, 250, 247, .28);
+  --scrim-card: rgba(251, 250, 247, .94);
   --ph-bg:
     radial-gradient(120% 90% at 70% 10%, #e3e8ed 0%, transparent 55%),
     radial-gradient(90% 70% at 15% 90%, #dfe4ea 0%, transparent 60%),

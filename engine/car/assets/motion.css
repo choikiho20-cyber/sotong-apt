@@ -1,0 +1,145 @@
+/* 장면별 고급 모션 — motion.js 가 html 에 .mx 를 붙였을 때만 켜진다.
+   모션 최소화 설정(prefers-reduced-motion)이면 motion.js 가 .mx-still 만 붙이고 전부 정지 상태로 보인다.
+   transform·opacity·clip-path 만 움직여 화면이 덜컹이지 않게(CLS 0) 한다. */
+
+/* ---------- 공통: 단어가 아래에서 차오르는 제목 ---------- */
+.mx .w { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .08em; margin-bottom: -.08em; }
+.mx .w > span { display: inline-block; transform: translateY(110%) rotate(4deg); transform-origin: 0 100%;
+  transition: transform 1s cubic-bezier(.16, 1, .3, 1) var(--d, 0ms); }
+.mx .split-on .w > span { transform: none; }
+.mx .sec-title.reveal { opacity: 1; transform: none; }   /* 제목은 단어 단위로만 움직인다 */
+
+/* 작은 영문 라벨 앞에 금색 선이 그어진다 */
+.mx .eyebrow { display: inline-flex; align-items: center; gap: 12px; }
+.mx .eyebrow::before { content: ""; width: 0; height: 1px; background: var(--gold); transition: width .9s cubic-bezier(.16, 1, .3, 1); }
+.mx .eyebrow.in::before { width: 34px; }
+
+/* ---------- 첫 화면 ---------- */
+.mx .hero-media { overflow: hidden; }
+/* 사진 위를 한 번 쓸고 지나가는 빛 — 9초마다 다시 */
+.mx .hero-media::after {
+  content: ""; position: absolute; inset: -20% -60%; pointer-events: none; z-index: 1;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, .55) 50%, transparent 58%);
+  transform: translateX(-70%); animation: mx-shine 9s cubic-bezier(.4, 0, .2, 1) 1.4s infinite;
+  mix-blend-mode: soft-light;
+}
+@keyframes mx-shine { 0% { transform: translateX(-70%); } 22%, 100% { transform: translateX(70%); } }
+.mx .hero-dust { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+/* .hero-cta 는 대표 차종 칸에서도 쓰는 이름이라 첫 화면(header.hero) 안으로만 좁힌다 */
+.mx header.hero .hero-claim, .mx header.hero .hero-role, .mx header.hero .hero-sub, .mx header.hero .hero-cta { opacity: 0; transform: translateY(22px);
+  transition: opacity 1s ease, transform 1.1s cubic-bezier(.16, 1, .3, 1); }
+.mx header.hero.on .hero-claim { opacity: 1; transform: none; transition-delay: .15s; }
+.mx header.hero.on .hero-role  { opacity: 1; transform: none; transition-delay: .75s; }
+.mx header.hero.on .hero-sub   { opacity: 1; transform: none; transition-delay: .9s; }
+.mx header.hero.on .hero-cta   { opacity: 1; transform: none; transition-delay: 1.05s; }
+/* 이름은 글자가 하나씩 떠오르며 금빛이 번졌다가 가라앉는다 */
+.mx .hero-name .ch { display: inline-block; opacity: 0; transform: translateY(.35em) scale(.96); filter: blur(10px);
+  transition: opacity .9s ease var(--d), transform 1.2s cubic-bezier(.16, 1, .3, 1) var(--d), filter 1s ease var(--d); }
+.mx .hero.on .hero-name .ch { opacity: 1; transform: none; filter: none;
+  animation: mx-gild 1.6s ease calc(var(--d) + 1.2s) both; }
+/* 다 떠오른 뒤 금빛이 글자를 따라 한 번 흐른다 (글자마다 시차) */
+@keyframes mx-gild { 0%, 100% { color: var(--text); } 45% { color: var(--gold); } }
+
+/* ---------- 실적 숫자: 다 세면 밑줄이 금빛으로 차오른다 ---------- */
+.mx .stat { position: relative; }
+.mx .stat::after { content: ""; position: absolute; left: 0; bottom: -1px; height: 2px; width: 100%;
+  background: linear-gradient(90deg, var(--gold), transparent); transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform 1.4s cubic-bezier(.16, 1, .3, 1) .2s; }
+.mx .stat.in::after { transform: scaleX(1); }
+.mx .stat-value { transition: text-shadow .8s ease; }
+.mx .stat.in .stat-value { text-shadow: 0 0 28px color-mix(in srgb, var(--gold) 35%, transparent); }
+
+/* ---------- 대표 차종: 막이 걷히듯 열리고 헤드라이트처럼 빛이 지난다 ---------- */
+.mx .feature-media { clip-path: inset(12% 6% 12% 6%); transition: clip-path 1.6s cubic-bezier(.16, 1, .3, 1); }
+.mx .feature.in .feature-media { clip-path: inset(0 0 0 0); }
+.mx .feature::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, .45) 50%, transparent 60%);
+  transform: translateX(-100%); mix-blend-mode: soft-light; }
+.mx .feature.in::after { animation: mx-sweep 2.2s cubic-bezier(.4, 0, .2, 1) .6s both; }
+@keyframes mx-sweep { to { transform: translateX(100%); } }
+.mx .feature-name { letter-spacing: .02em; transition: letter-spacing 1.8s cubic-bezier(.16, 1, .3, 1); }
+.mx .feature.in .feature-name { letter-spacing: -.035em; }
+
+/* ---------- 차종 카드: 흐림에서 또렷하게, 마우스를 올리면 광택이 지난다 ---------- */
+/* 등장은 한 번짜리 animation(backwards)으로 — 끝나면 비켜서서 기존 카드 기울기(.tilt) transform 이 그대로 산다 */
+.mx .model { opacity: 0; }
+.mx .model.in { opacity: 1; animation: mx-card 1s cubic-bezier(.16, 1, .3, 1) var(--d, 0ms) backwards; }
+@keyframes mx-card { from { opacity: 0; transform: translateY(26px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+.mx .model-hit { overflow: hidden; }
+.mx .model-hit::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, .5) 48%, transparent 66%);
+  transform: translateX(-120%); transition: transform .9s cubic-bezier(.16, 1, .3, 1); }
+.mx .model:hover .model-hit::after { transform: translateX(120%); }
+.mx .model img { transition: transform 1.2s cubic-bezier(.16, 1, .3, 1); }
+.mx .model:hover img { transform: scale(1.06); }
+
+/* ---------- 이달 조건: 금빛 테두리가 천천히 돈다 ---------- */
+@property --mx-ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.mx .offer { position: relative; isolation: isolate; }
+.mx .offer::before { content: ""; position: absolute; inset: 0; z-index: -1; padding: 1px; pointer-events: none;
+  background: conic-gradient(from var(--mx-ang), transparent 0 70%, var(--gold) 85%, transparent 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; animation: mx-spin 6s linear infinite; opacity: .9; }
+@keyframes mx-spin { to { --mx-ang: 360deg; } }
+.mx .offer-kind { position: relative; }
+.mx .offer.in .offer-kind::after { content: ""; position: absolute; left: -10px; top: 50%; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--gold); transform: translateY(-50%); animation: mx-pulse 2s ease-in-out infinite; }
+@keyframes mx-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--gold) 60%, transparent); } 50% { box-shadow: 0 0 0 7px transparent; } }
+
+/* 은은하게 흐르는 빛 배경 — 이달 조건·문의 칸 */
+.mx #offers, .mx .contact { position: relative; overflow: hidden; isolation: isolate; }
+.mx #offers::before, .mx .contact::before { content: ""; position: absolute; inset: -30%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(40% 35% at 20% 30%, color-mix(in srgb, var(--gold) 16%, transparent), transparent 70%),
+    radial-gradient(35% 30% at 80% 70%, color-mix(in srgb, var(--gold) 11%, transparent), transparent 70%);
+  animation: mx-aurora 18s ease-in-out infinite alternate; }
+@keyframes mx-aurora { from { transform: translate3d(-4%, -2%, 0) rotate(0deg); } to { transform: translate3d(4%, 3%, 0) rotate(8deg); } }
+
+/* ---------- 계산기: 숫자가 굴러 올라가고 원금·이자 막대가 차오른다 ---------- */
+.mx .calc-bar, .mx .calc-legend { grid-column: 1 / -1; }
+.mx .calc-bar { display: flex; height: 10px; margin-top: 14px; background: var(--line-soft); overflow: hidden; }
+.mx .calc-bar i { display: block; height: 100%; transform-origin: 0 50%; transform: scaleX(0);
+  transition: transform 1s cubic-bezier(.16, 1, .3, 1); }
+.mx .calc-bar .p { background: var(--text); }
+.mx .calc-bar .r { background: var(--gold); transition-delay: .25s; }
+.mx .calc-legend { display: flex; gap: 18px; margin-top: 8px; font-size: 12.5px; color: var(--mute); }
+.mx .calc-legend b { display: inline-block; width: 9px; height: 9px; margin-right: 6px; vertical-align: -1px; }
+.mx .calc-out strong { display: inline-block; transition: transform .35s ease; }
+.mx .calc-out.bump strong { transform: scale(1.06); }
+
+/* ---------- 진행 단계: 단계 사이 선이 그어지고 번호가 튄다 ---------- */
+.mx .steps { position: relative; }
+.mx .steps::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--gold);
+  transform: scaleX(0); transform-origin: 0 50%; transition: transform 1.8s cubic-bezier(.16, 1, .3, 1); z-index: 1; }
+.mx .steps.in::before { transform: scaleX(1); }
+.mx .step-no { display: inline-block; transition: transform .7s cubic-bezier(.34, 1.56, .64, 1) var(--d, 0ms), color .6s ease var(--d, 0ms); transform: scale(.6); }
+.mx .steps.in .step-no { transform: none; color: var(--gold); }
+
+/* ---------- 약속: 왼쪽 금색 막대가 자란다 ---------- */
+.mx .principle { position: relative; padding-left: 22px; }
+.mx .principle::before { content: ""; position: absolute; left: 0; top: clamp(24px, 3.4vw, 38px); bottom: clamp(24px, 3.4vw, 38px); width: 2px;
+  background: var(--gold); transform: scaleY(0); transform-origin: 50% 0; transition: transform 1.1s cubic-bezier(.16, 1, .3, 1) .2s; }
+.mx .principle.in::before { transform: scaleY(1); }
+
+/* ---------- 글 목록: 왼쪽에서 미끄러져 들어온다 ---------- */
+.mx .post-row.reveal { transform: translateX(-28px); }
+.mx .post-row.reveal.in { transform: none; }
+
+/* ---------- 자주 묻는 질문: 부드럽게 펼쳐진다 (높이는 motion.js) ---------- */
+.mx .faq p { overflow: hidden; }
+
+/* ---------- 문의: QR 을 스캔선이 훑는다 ---------- */
+.mx .qr-box { position: relative; }
+.mx .qr-box .qr-scan { position: absolute; left: 8px; width: 148px; height: 2px; top: 8px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent); box-shadow: 0 0 12px var(--gold);
+  animation: mx-scan 2.6s ease-in-out infinite; }
+@keyframes mx-scan { 0%, 100% { transform: translateY(0); opacity: 0; } 10%, 90% { opacity: 1; } 50% { transform: translateY(146px); } }
+
+/* 버튼이 손끝을 살짝 따라온다 (마우스 있는 화면만, motion.js) */
+.mx .btn { transition: transform .35s cubic-bezier(.16, 1, .3, 1), background .2s, color .2s, border-color .2s; }
+
+/* 폰 하단 바가 아래에서 미끄러져 올라온다 */
+.mx .sticky-cta { animation: mx-rise .9s cubic-bezier(.16, 1, .3, 1) 1.6s both; }
+@keyframes mx-rise { from { transform: translateY(100%); } to { transform: none; } }
+
+/* 모션 최소화(.mx-still)면 .mx 규칙이 하나도 안 붙어 처음부터 다 보인다 */
