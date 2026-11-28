@@ -707,7 +707,8 @@ SEC_SCRIPT = ("https://cdn.jsdelivr.net/npm/ https://cdnjs.cloudflare.com/ajax/l
               "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/ "
               "https://static.cloudflareinsights.com/")   # Pages 방문 통계(Web Analytics)가 페이지에 끼워 넣는 beacon — 막히면 콘솔 오류·통계 0(문진 11/20)
 SEC_CONNECT = ("https://geulhaejum.kr https://texttospeech.googleapis.com https://cdn.jsdelivr.net "
-               "https://cdnjs.cloudflare.com https://tessdata.projectnaptha.com https://cloudflareinsights.com")
+               "https://cdnjs.cloudflare.com https://tessdata.projectnaptha.com https://cloudflareinsights.com "
+               "https://car-track.choikiho20.workers.dev")   # 도구 「문제 신고」(법인도구 web/app.js → 문의 서버 /report, 11/28) — track_url 이 빈 세대도 보내야 한다
 
 
 def write_sec_headers(cfg):
